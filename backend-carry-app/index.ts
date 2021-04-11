@@ -12,16 +12,24 @@ const server = https.createServer(app);
 const io = new Server(server);
 
 console.log(config.query);
+var response: string|null = 'none';
 
 puppeteer
   .use(StealthPlugin())
   .launch()
   .then(async browser => {
-    const page = await browser.newPage()
-    await page.goto(config.query)
-    await page.waitForTimeout(5000)
-    await page.screenshot({ path: 'stealth.png', fullPage: true })
-    await browser.close()
+    const page = await browser.newPage();
+    await page.goto(config.query);
+    await page.waitForTimeout(5000);
+    response = await page.$eval('pre', res => {
+        if (res != null) {
+          return res.textContent;
+        }
+        else {
+          return 'response null';
+        }
+    });
+    await browser.close();
   })
 
 app.get('/', (req,res) => res.send('Express + TypeScript Server for Instagram Gallery Viewer'));
