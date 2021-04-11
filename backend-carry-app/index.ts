@@ -11,8 +11,8 @@ const app = express();
 const server = https.createServer(app);
 const io = new Server(server);
 
-console.log(config.query);
 var response: string|null = 'none';
+var instaInfo: any = {};
 
 puppeteer
   .use(StealthPlugin())
@@ -22,15 +22,20 @@ puppeteer
     await page.goto(config.query);
     await page.waitForTimeout(5000);
     response = await page.$eval('pre', res => {
-        if (res != null) {
-          return res.textContent;
-        }
-        else {
+        if (res == null) {
           return 'response null';
         }
+        else {
+          return res.textContent;
+        }
     });
+    instaInfo = JSON.parse(response!);
+    console.log(instaInfo.data.user.reel.owner.username);
     await browser.close();
   })
+
+//var instaUsername = JSON.parse(response);
+//console.log(instaUsername);
 
 app.get('/', (req,res) => res.send('Express + TypeScript Server for Instagram Gallery Viewer'));
 app.listen(PORT, () => {
