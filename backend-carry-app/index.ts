@@ -24,16 +24,13 @@ var currUname = '';
 
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
+  socket.emit('change', currUname);
 
-  const pingUname = async () => {
-    checkUname(socket);
-    await new Promise(r => setTimeout(r, 60000));
-    pingUname();
-  }
-  pingUname();
+  var pingUname = setInterval(checkUname, 30000, socket);
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
+    clearInterval(pingUname);
   });
 
 });
@@ -64,8 +61,6 @@ const checkUname = (socket:Socket) => {
           console.error(error);
         }
       }
-      page.removeAllListeners();
-      page.removeAllListeners('SIGINT');
       await page.close();
       await browser.close();
     });

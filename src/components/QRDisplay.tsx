@@ -26,7 +26,6 @@ const QRDisplay = () => {
     });
     return () => {
       console.log('cleanup');
-      socket.off('change');
       socket.disconnect();
     }
   });
