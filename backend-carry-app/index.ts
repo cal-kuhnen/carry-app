@@ -5,30 +5,41 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import config from '../config';
+import route from './routes/route';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const app = express();
+app.use(route);
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
 
 var response: string|null = 'none';
 var instaInfo: any = {};
 var currUname = '';
 
-io.on("connection", (socket: Socket) => {
-  console.log(socket.id);
+io.on("connection", (socket:Socket) => {
+  console.log(`Socket connected with id: ${socket.id}`);
 
   const pingUname = async () => {
-    await new Promise(r => setTimeout(r, 60000));
     checkUname(socket);
+    await new Promise(r => setTimeout(r, 60000));
     pingUname();
   }
-
   pingUname();
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
 
 });
 
-const checkUname = (socket: Socket) => {
+
+const checkUname = (socket:Socket) => {
   // Use puppeteer to access instagram graphql query because using axios results
   // in bot detection and a redirect from instagram.
   console.log('check uname in progress');
@@ -38,7 +49,7 @@ const checkUname = (socket: Socket) => {
     .then(async browser => {
       const page = await browser.newPage();
       await page.goto(config.query);
-      await page.waitForTimeout(5000);
+      await page.waitForTimeout(2000);
       response = await page.$eval('pre', res => res.textContent); // get JSON portion of html response
       if(response != null) {
         try {
@@ -53,6 +64,9 @@ const checkUname = (socket: Socket) => {
           console.error(error);
         }
       }
+      page.removeAllListeners();
+      page.removeAllListeners('SIGINT');
+      await page.close();
       await browser.close();
     });
 }
