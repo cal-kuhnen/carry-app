@@ -19,7 +19,7 @@ io.on("connection", (socket: Socket) => {
   console.log(socket.id);
 
   const pingUname = async () => {
-    await new Promise(r => setTimeout(r, 30000));
+    await new Promise(r => setTimeout(r, 60000));
     checkUname(socket);
     pingUname();
   }
@@ -46,7 +46,7 @@ const checkUname = (socket: Socket) => {
           let newUname = instaInfo.data.user.reel.owner.username;
           if(newUname != currUname) {
             currUname = newUname;  // check for username update
-            console.log(currUname + 'here');
+            console.log(currUname);
             socket.emit('change', currUname);
           }
         } catch (error) {
