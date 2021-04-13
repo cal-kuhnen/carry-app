@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { Socket } from 'socket.io-client';
+import { socket } from '../App';
 
-interface qrProps {
-  socket: Socket;
-}
 const baseURL = 'https://instagram.com/';
 
 const generateQR = async (text:string) => {
@@ -18,21 +15,20 @@ const generateQR = async (text:string) => {
   }
 }
 
-const QRDisplay = (qrProps: qrProps) => {
+const QRDisplay = () => {
   const [uName, setUname] = useState('no data');
   const [qr, setQR] = useState('');
 
-
   useEffect(() => {
-    qrProps.socket.emit('give-qr');
-    qrProps.socket.on('change', async data => {
+    socket.emit('give-qr');
+    socket.on('change', async data => {
       setUname(data);
       console.log(baseURL + data);
       setQR(await generateQR(baseURL + data));
     });
     return () => {
       console.log('cleanup');
-      
+
     }
   });
 
