@@ -21,12 +21,18 @@ const io = new Server(server, {
 let response: string|null = 'none';
 let instaInfo: any = {};
 let currUname = '';
+let pingUname: any;
 
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
-  socket.emit('change', currUname);
 
-  let pingUname = setInterval(checkUname, 30000, socket);
+  clearInterval(pingUname);
+  pingUname = setInterval(checkUname, 30000, socket);
+
+  socket.on('give-qr', () => {
+    console.log('giving qr');
+    socket.emit('change', currUname);
+  });
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
@@ -61,6 +67,7 @@ const checkUname = (socket:Socket) => {
           console.error(error);
         }
       }
+      page.removeAllListeners();
       await page.close();
       await browser.close();
     });

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import socketIOClient from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 
-const ENDPOINT = 'http://localhost:3001';
+interface qrProps {
+  socket: Socket;
+}
 const baseURL = 'https://instagram.com/';
 
 const generateQR = async (text:string) => {
@@ -16,27 +18,28 @@ const generateQR = async (text:string) => {
   }
 }
 
-const QRDisplay = () => {
+const QRDisplay = (qrProps: qrProps) => {
   const [uName, setUname] = useState('no data');
   const [qr, setQR] = useState('');
 
+
   useEffect(() => {
-    const socket = socketIOClient(ENDPOINT);
-    socket.on('change', async data => {
+    qrProps.socket.emit('give-qr');
+    qrProps.socket.on('change', async data => {
       setUname(data);
       console.log(baseURL + data);
       setQR(await generateQR(baseURL + data));
     });
     return () => {
       console.log('cleanup');
-      socket.disconnect();
+      
     }
   });
 
   return (
     <div className='QRCode'>
       {uName}
-      <img src={qr}></img>
+      <img src={qr} alt='QR code for instagram link'></img>
     </div>
   )
 }
