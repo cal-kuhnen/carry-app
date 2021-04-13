@@ -18,15 +18,15 @@ const io = new Server(server, {
   }
 });
 
-var response: string|null = 'none';
-var instaInfo: any = {};
-var currUname = '';
+let response: string|null = 'none';
+let instaInfo: any = {};
+let currUname = '';
 
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
   socket.emit('change', currUname);
 
-  var pingUname = setInterval(checkUname, 30000, socket);
+  let pingUname = setInterval(checkUname, 30000, socket);
 
   socket.on("disconnect", () => {
     console.log("user disconnected");

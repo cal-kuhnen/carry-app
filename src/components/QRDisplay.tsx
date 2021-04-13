@@ -7,22 +7,25 @@ const baseURL = 'https://instagram.com/';
 
 const generateQR = async (text:string) => {
   try {
-    console.log(await QRCode.toDataURL(text));
+    let qrURL = await QRCode.toDataURL(text);
+    return qrURL;
   }
   catch (err) {
     console.error(err);
+    return 'error';
   }
 }
 
 const QRDisplay = () => {
   const [uName, setUname] = useState('no data');
+  const [qr, setQR] = useState('');
 
   useEffect(() => {
     const socket = socketIOClient(ENDPOINT);
     socket.on('change', async data => {
       setUname(data);
       console.log(baseURL + data);
-      await generateQR(baseURL + data);
+      setQR(await generateQR(baseURL + data));
     });
     return () => {
       console.log('cleanup');
@@ -33,6 +36,7 @@ const QRDisplay = () => {
   return (
     <div className='QRCode'>
       {uName}
+      <img src={qr}></img>
     </div>
   )
 }
