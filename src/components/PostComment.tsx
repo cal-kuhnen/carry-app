@@ -4,6 +4,7 @@ import { socket } from '../App';
 interface Comment {
   link: string;
   comment: string;
+  time: string;
 }
 
 const PostComment = () => {
@@ -19,9 +20,12 @@ const PostComment = () => {
   };
 
   const onSubmit = (event: any) => {
+    let date = new Date();
+    let time = date.toLocaleString('default', { minute: 'numeric', hour: 'numeric', day: 'numeric', month: 'short' });
     let toPost: Comment = {
       link: link,
-      comment: comment
+      comment: comment,
+      time: time
     };
     console.log(toPost);
     socket.emit('post-comment', toPost);

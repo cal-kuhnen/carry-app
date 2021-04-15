@@ -11,12 +11,13 @@ import route from './routes/route';
 interface Comment {
   link: string;
   comment: string;
+  time?: string;
 }
 
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
 const uri = `mongodb+srv://dbAdminCal:${mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
 
 const PORT = process.env.PORT || 3002;
 const app = express();
@@ -47,7 +48,7 @@ io.on("connection", (socket:Socket) => {
 
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
-    addComment(client, toPost);
+    addComment(toPost);
     postComment(socket, toPost);
   });
 
@@ -133,13 +134,13 @@ const postComment = (socket: Socket, toPost: Comment) => {
 }
 
 // Add new comment to database
-const addComment = async  (client: any, newComment: Comment) => {
+const addComment = async  (newComment: Comment) => {
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   try {
     await client.connect();
-    let databasesList = await client.db().admin().listDatabases();
+    const result = await client.db('insta_test').collection('comments').insertOne(newComment);
 
-    console.log("Databases:");
-    databasesList.databases.forEach((db: any) => console.log(` - ${db.name}`));
+    console.log(`Added comment with id: ${result.insertedId}`);
 
   } catch (err) {
     console.error(err);
