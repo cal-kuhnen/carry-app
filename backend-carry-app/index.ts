@@ -47,10 +47,9 @@ io.on("connection", (socket:Socket) => {
 
 });
 
-
+// Use puppeteer to access instagram graphql query because using axios results
+// in bot detection and a redirect from instagram.
 const checkUname = (socket:Socket) => {
-  // Use puppeteer to access instagram graphql query because using axios results
-  // in bot detection and a redirect from instagram.
   console.log('check uname in progress');
   puppeteer
     .use(StealthPlugin())
@@ -79,6 +78,39 @@ const checkUname = (socket:Socket) => {
           }
         }
         page.removeAllListeners();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        await browser.close();
+      }
+    });
+}
+
+// Posts a comment to linked instagram post from the art account
+const postComment = (socket:Socket) => {
+  console.log('posting comment');
+  puppeteer
+    .use(StealthPlugin())
+    .launch()
+    .then(async browser => {
+      try {
+        // Login flow
+        const page = await browser.newPage();
+        await page.goto('https://www.instagram.com/accounts/login/?source=auth_switcher');
+        await page.waitForSelector('input[name="username"]');
+        await page.type('input[name="username"]', config.username);
+        await page.type('input[name="password"]', config.password);
+        await page.click('button[type="submit"]');
+
+        // Waiting for page to refresh
+        await page.waitForNavigation();
+
+        // Navigate to post and submitting the comment
+        await page.goto('https://www.instagram.com/p/CNrJk7aF57A/');
+        await page.waitForSelector('textarea');
+        await page.type('textarea', 'so good');
+
+        await page.click('button[type="submit"]');
       } catch (err) {
         console.error(err);
       } finally {
