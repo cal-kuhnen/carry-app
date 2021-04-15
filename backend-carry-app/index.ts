@@ -47,6 +47,7 @@ io.on("connection", (socket:Socket) => {
 
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
+    postComment(socket);
   });
 
   socket.on("disconnect", () => {
@@ -95,6 +96,7 @@ const checkUname = (socket:Socket) => {
     });
 }
 
+
 // Posts a comment to linked instagram post from the art account
 const postComment = (socket:Socket) => {
   console.log('posting comment');
@@ -105,7 +107,7 @@ const postComment = (socket:Socket) => {
       try {
         // Login flow
         const page = await browser.newPage();
-        await page.goto('https://www.instagram.com/accounts/login/?source=auth_switcher');
+        await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
         await page.type('input[name="username"]', config.username);
         await page.type('input[name="password"]', config.password);
@@ -115,11 +117,12 @@ const postComment = (socket:Socket) => {
         await page.waitForNavigation();
 
         // Navigate to post and submitting the comment
-        await page.goto('https://www.instagram.com/p/CNrJk7aF57A/');
+        await page.goto('https://www.instagram.com/p/CNcVluPlRI1/');
         await page.waitForSelector('textarea');
-        await page.type('textarea', 'so good');
+        await page.type('textarea', 'beautiful car');
 
         await page.click('button[type="submit"]');
+        console.log('comment posted');
       } catch (err) {
         console.error(err);
       } finally {
