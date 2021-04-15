@@ -23,12 +23,7 @@ const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(route);
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
-});
+const io = new Server(server);
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -56,7 +51,6 @@ io.on("connection", (socket:Socket) => {
     console.log("user disconnected");
     clearInterval(pingUname);
   });
-
 });
 
 // Use puppeteer to access instagram graphql query because using axios results
@@ -134,7 +128,7 @@ const postComment = (socket: Socket, toPost: Comment) => {
 }
 
 // Add new comment to database, send back updated comment list
-const addComment = async  (socket: Socket, newComment: Comment) => {
+const addComment = async (socket: Socket, newComment: Comment) => {
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   try {
     await client.connect();
@@ -143,9 +137,10 @@ const addComment = async  (socket: Socket, newComment: Comment) => {
 
     console.log(`Added comment with id: ${result.insertedId}`);
 
-    let commentArray = await collection.find().sort({_id:-1}).toArray();
-    let commentList = JSON.stringify(commentArray);
-    socket.emit('comment-list', commentList);
+    let commentArray = await collection.find().sort({_id:-1}).limit(10).toArray();
+    let commentList = JSON.parse(JSON.stringify(commentArray));
+    socket.emit('test', commentList);
+    console.log('sending comment list');
 
   } catch (err) {
     console.error(err);
@@ -154,10 +149,8 @@ const addComment = async  (socket: Socket, newComment: Comment) => {
   }
 }
 
-//var instaUsername = JSON.parse(response);
-//console.log(instaUsername);
-
-app.get('/', (req,res) => res.send('Express + TypeScript Server for Instagram Gallery Viewer'));
+app.use(express.static("build"));
+app.use("/post", express.static("build"));
 server.listen(PORT, () => {
   console.log(`[server]: Server is running at https://localhost:${PORT}`);
 });
