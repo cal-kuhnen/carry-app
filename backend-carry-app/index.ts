@@ -47,7 +47,8 @@ io.on("connection", (socket:Socket) => {
 
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
-    postComment(socket);
+    addComment(client, toPost);
+    postComment(socket, toPost);
   });
 
   socket.on("disconnect", () => {
@@ -98,7 +99,7 @@ const checkUname = (socket:Socket) => {
 
 
 // Posts a comment to linked instagram post from the art account
-const postComment = (socket:Socket) => {
+const postComment = (socket: Socket, toPost: Comment) => {
   console.log('posting comment');
   puppeteer
     .use(StealthPlugin())
@@ -117,9 +118,9 @@ const postComment = (socket:Socket) => {
         await page.waitForNavigation();
 
         // Navigate to post and submitting the comment
-        await page.goto('https://www.instagram.com/p/CNcVluPlRI1/');
+        await page.goto(toPost.link);
         await page.waitForSelector('textarea');
-        await page.type('textarea', 'beautiful car');
+        await page.type('textarea', toPost.comment);
 
         await page.click('button[type="submit"]');
         console.log('comment posted');
@@ -129,6 +130,22 @@ const postComment = (socket:Socket) => {
         await browser.close();
       }
     });
+}
+
+// Add new comment to database
+const addComment = async  (client: any, newComment: Comment) => {
+  try {
+    await client.connect();
+    let databasesList = await client.db().admin().listDatabases();
+
+    console.log("Databases:");
+    databasesList.databases.forEach((db: any) => console.log(` - ${db.name}`));
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    await client.close();
+  }
 }
 
 //var instaUsername = JSON.parse(response);
