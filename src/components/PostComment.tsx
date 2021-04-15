@@ -13,19 +13,29 @@ const PostComment = () => {
   const comChange = (event: any) => {
     setComment(event.target.value);
   };
-  
+
   const linkChange = (event: any) => {
     setLink(event.target.value);
   };
 
+  const onSubmit = (event: any) => {
+    let toPost: Comment = {
+      link: link,
+      comment: comment
+    };
+    console.log(toPost);
+    socket.emit('post-comment', toPost);
+    event.preventDefault();
+  };
+
   return (
-    <form>
+    <form onSubmit={onSubmit}>
       <label>
-        Comment: {comment}
+        Comment:
         <input value={comment} onChange={comChange} />
       </label>
       <label>
-        Link: {link}
+        Link:
         <input value={link} onChange={linkChange} />
       </label>
       <input type='submit' value='Post' />

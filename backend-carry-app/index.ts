@@ -8,6 +8,11 @@ import * as mongodb from 'mongodb';
 import { config, mongoInfo } from '../config';
 import route from './routes/route';
 
+interface Comment {
+  link: string;
+  comment: string;
+}
+
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
 const uri = `mongodb+srv://dbAdminCal:${mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -38,6 +43,10 @@ io.on("connection", (socket:Socket) => {
   socket.on('give-qr', () => {
     console.log('giving qr');
     socket.emit('change', currUname);
+  });
+
+  socket.on('post-comment', (toPost: Comment) => {
+    console.log(`must post comment ${toPost.comment}`);
   });
 
   socket.on("disconnect", () => {
