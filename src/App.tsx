@@ -3,7 +3,7 @@ import './App.css';
 import QRDisplay from './components/QRDisplay';
 import socketIOClient from 'socket.io-client';
 
-const ENDPOINT = 'http://localhost:3001';
+const ENDPOINT = 'http://localhost:3002';
 export const socket = socketIOClient(ENDPOINT);
 
 function App() {

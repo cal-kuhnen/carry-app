@@ -4,10 +4,16 @@ import axios from 'axios';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
-import config from '../config';
+import * as mongodb from 'mongodb';
+import { config, mongoInfo } from '../config';
 import route from './routes/route';
 
-const PORT = process.env.PORT || 3001;
+// Setup mongoDB connection
+const MongoClient = mongodb.MongoClient;
+const uri = `mongodb+srv://dbAdminCal:${mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(route);
 const server = http.createServer(app);
@@ -27,7 +33,7 @@ io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
   clearInterval(pingUname);
-  pingUname = setInterval(checkUname, 30000, socket);
+  pingUname = setInterval(checkUname, 120000, socket);
 
   socket.on('give-qr', () => {
     console.log('giving qr');
@@ -50,26 +56,34 @@ const checkUname = (socket:Socket) => {
     .use(StealthPlugin())
     .launch()
     .then(async browser => {
-      const page = await browser.newPage();
-      await page.goto(config.query);
-      await page.waitForTimeout(2000);
-      response = await page.$eval('pre', res => res.textContent); // get JSON portion of html response
-      if(response != null) {
+      try {
+        const page = await browser.newPage();
+        await page.goto(config.query);
+        await page.waitForTimeout(2000);
         try {
-          instaInfo = JSON.parse(response!);
-          let newUname = instaInfo.data.user.reel.owner.username;
-          if(newUname != currUname) {
-            currUname = newUname;  // check for username update
-            console.log(currUname);
-            socket.emit('change', currUname);
-          }
-        } catch (error) {
-          console.error(error);
+          response = await page.$eval('pre', res => res.textContent); // get JSON portion of html response
+        } catch(err) {
+          console.error(err);
         }
+        if(response != null) {
+          try {
+            instaInfo = JSON.parse(response!);
+            let newUname = instaInfo.data.user.reel.owner.username;
+            if(newUname != currUname) {
+              currUname = newUname;  // check for username update
+              console.log(currUname);
+              socket.emit('change', currUname); // send new username to frontend
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+        page.removeAllListeners();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        await browser.close();
       }
-      page.removeAllListeners();
-      await page.close();
-      await browser.close();
     });
 }
 

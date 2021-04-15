@@ -20,7 +20,9 @@ const QRDisplay = () => {
   const [qr, setQR] = useState('');
 
   useEffect(() => {
-    socket.emit('give-qr');
+    if (uName === '' || uName === 'no data') {
+      socket.emit('give-qr');
+    }
     socket.on('change', async data => {
       setUname(data);
       console.log(baseURL + data);
