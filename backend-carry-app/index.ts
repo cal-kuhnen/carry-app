@@ -48,7 +48,7 @@ io.on("connection", (socket:Socket) => {
 
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
-    addComment(toPost);
+    addComment(socket, toPost);
     postComment(socket, toPost);
   });
 
@@ -133,14 +133,19 @@ const postComment = (socket: Socket, toPost: Comment) => {
     });
 }
 
-// Add new comment to database
-const addComment = async  (newComment: Comment) => {
+// Add new comment to database, send back updated comment list
+const addComment = async  (socket: Socket, newComment: Comment) => {
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   try {
     await client.connect();
-    const result = await client.db('insta_test').collection('comments').insertOne(newComment);
+    let collection = client.db('insta_test').collection('comments');
+    const result = await collection.insertOne(newComment);
 
     console.log(`Added comment with id: ${result.insertedId}`);
+
+    let commentArray = await collection.find().sort({_id:-1}).toArray();
+    let commentList = JSON.stringify(commentArray);
+    socket.emit('comment-list', commentList);
 
   } catch (err) {
     console.error(err);

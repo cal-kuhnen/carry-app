@@ -1,4 +1,10 @@
 import React from 'react';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
 import './App.css';
 import QRDisplay from './components/QRDisplay';
 import PostComment from './components/PostComment';
@@ -9,10 +15,14 @@ export const socket = socketIOClient(ENDPOINT);
 
 function App() {
   return (
-    <>
-      <QRDisplay />
-      <PostComment />
-    </>
+    <Router>
+      <Route path='/post'>
+        <PostComment />
+      </Route>
+      <Route exact={true} path='/'>
+        <QRDisplay />
+      </Route>
+    </Router>
   );
 }
 
