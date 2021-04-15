@@ -4,6 +4,7 @@ import { socket } from '../App';
 
 const baseURL = 'https://instagram.com/';
 
+// Create QR code for the link to the instagram page
 const generateQR = async (text:string) => {
   try {
     let qrURL = await QRCode.toDataURL(text);
