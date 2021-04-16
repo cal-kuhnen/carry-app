@@ -82,7 +82,7 @@ const checkUname = (socket:Socket) => {
   console.log('check uname in progress');
   puppeteer
     .use(StealthPlugin())
-    .launch()
+    .launch({ args: ['--no-sandbox']})
     .then(async browser => {
       try {
         const page = await browser.newPage();
@@ -129,7 +129,7 @@ const postComment = (socket: Socket, toPost: Comment) => {
   console.log('posting comment');
   puppeteer
     .use(StealthPlugin())
-    .launch()
+    .launch({ args: ['--no-sandbox']})
     .then(async browser => {
       try {
         // Login flow
