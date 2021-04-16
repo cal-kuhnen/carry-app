@@ -5,7 +5,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-import { config, mongoInfo } from './config';
+//import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
@@ -16,7 +16,7 @@ interface Comment {
 
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
-const uri = `mongodb+srv://dbAdminCal:${mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
 const PORT = process.env.PORT || 3002;
 const app = express();
@@ -119,8 +119,8 @@ const postComment = (socket: Socket, toPost: Comment) => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', config.username);
-        await page.type('input[name="password"]', config.password);
+        await page.type('input[name="username"]', process.env.INSTA_USER);
+        await page.type('input[name="password"]', process.env.INSTA_PASS);
         await page.click('button[type="submit"]');
 
         // Waiting for page to refresh
