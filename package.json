@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --project ./",
-    "start": "nodemon index.ts"
+    "start": "ts-node index.ts",
+    "devenv": "nodemon index.ts",
+    "heroku-postbuild": "cd client && npm install && npm run build"
   },
   "author": "Calvin Kuhnen",
   "license": "ISC",

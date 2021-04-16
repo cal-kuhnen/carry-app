@@ -1,11 +1,11 @@
 import express from 'express';
 import http from 'http';
-import axios from 'axios';
+import path from 'path';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-import { config, mongoInfo } from '../config';
+import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
@@ -20,14 +20,16 @@ const uri = `mongodb+srv://dbAdminCal:${mongoInfo.password}@cluster0.1seup.mongo
 
 const PORT = process.env.PORT || 3002;
 const app = express();
-app.use(route);
+app.use(express.static(path.join(__dirname, 'client/build')));
 const server = http.createServer(app);
-const io = new Server(server, {
+const io = new Server(server);
+// below is for dev environment
+/* {
   cors: {
     origin: "http://localhost:3000",
     methods: ["GET", "POST"]
   }
-});
+} */
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -163,8 +165,10 @@ const addComment = async (socket: Socket, newComment: Comment) => {
   }
 }
 
-//app.use(express.static("build"));
-//app.use("/post", express.static("build"));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+});
+
 server.listen(PORT, () => {
   console.log(`[server]: Server is running at https://localhost:${PORT}`);
 });
