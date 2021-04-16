@@ -60,6 +60,10 @@ io.on("connection", (socket:Socket) => {
     socket.emit('change', currUname);
   });
 
+  socket.on('give-comments', () => {
+    returnComments(socket);
+  })
+
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
     addComment(socket, toPost);
@@ -164,6 +168,21 @@ const addComment = async (socket: Socket, newComment: Comment) => {
     const result = await collection.insertOne(newComment);
 
     console.log(`Added comment with id: ${result.insertedId}`);
+
+    await returnComments(socket);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    await client.close();
+  }
+}
+
+const returnComments = async (socket: Socket) => {
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+  try {
+    await client.connect();
+    let collection = client.db('insta_test').collection('comments');
 
     // get 10 most recent comments to display on page after adding new
     let commentArray = await collection.find().sort({_id:-1}).limit(10).toArray();
