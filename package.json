@@ -8,6 +8,7 @@
     "build": "tsc --project ./",
     "start": "ts-node index.ts",
     "devenv": "nodemon index.ts",
+    "postinstall": "npm run build-ts",
     "heroku-postbuild": "cd client && npm install && npm run build"
   },
   "author": "Calvin Kuhnen",
