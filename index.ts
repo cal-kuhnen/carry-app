@@ -38,7 +38,7 @@ io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
   clearInterval(pingUname);
-  pingUname = setInterval(checkUname, 120000, socket);
+  pingUname = setInterval(checkUname, 60000, socket);
 
   socket.on('give-qr', () => {
     console.log('giving qr');
@@ -67,6 +67,14 @@ const checkUname = (socket:Socket) => {
     .then(async browser => {
       try {
         const page = await browser.newPage();
+        await page.goto('https://www.instagram.com/accounts/login/');
+        await page.waitForSelector('input[name="username"]');
+        await page.type('input[name="username"]', config.username);
+        await page.type('input[name="password"]', config.password);
+        await page.click('button[type="submit"]');
+
+        // Waiting for page to refresh
+        await page.waitForNavigation();
         await page.goto(config.query);
         await page.waitForTimeout(2000);
         try {

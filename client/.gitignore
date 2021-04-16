@@ -2,8 +2,6 @@
 
 # dependencies
 /node_modules
-/client/node_modules
-/backend-carry-app
 /.pnp
 .pnp.js
 

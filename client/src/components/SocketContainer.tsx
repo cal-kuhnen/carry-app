@@ -6,14 +6,18 @@ import PostComment from './PostComment';
 
 const ENDPOINT = 'http://localhost:3002';
 export const socket = socketIOClient(ENDPOINT);
+const emptyComments = [{_id:'', link:'', comment:'', time:''}];
 
 const SocketContainer = () => {
   const [uName, setUname] = useState('');
-  const [commentList, setCommentList] = useState([{_id:'', link:'', comment:'', time:''}]);
+  const [commentList, setCommentList] = useState(emptyComments);
 
   useEffect(() => {
     if (uName === '') {
       socket.emit('give-qr');
+    }
+    if (commentList === emptyComments) {
+      socket.emit('give-comments');
     }
     socket.on('change', data => {
       setUname(data);
