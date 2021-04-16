@@ -14,6 +14,9 @@ interface Comment {
   time?: string;
 }
 
+const query = "https://www.instagram.com/graphql/query/?query_hash=c9100bf9110dd6361671f113dd02e7d6&variables={%22user_id%22:%222010715942%22,%22include_chaining%22:false,%22include_reel%22:true,%22include_suggested_users%22:false,%22include_logged_out_extras%22:false,%22include_highlight_reels%22:false,%22include_related_profiles%22:false}";
+
+
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
 const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -71,13 +74,13 @@ const checkUname = (socket:Socket) => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', config.username);
-        await page.type('input[name="password"]', config.password);
+        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
+        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
 
         // Waiting for page to refresh
         await page.waitForNavigation();
-        await page.goto(config.query);
+        await page.goto(query);
         await page.waitForTimeout(2000);
         try {
           response = await page.$eval('pre', res => res.textContent); // get JSON portion of html response
