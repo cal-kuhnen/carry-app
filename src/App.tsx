@@ -6,12 +6,8 @@ import {
   Link
 } from "react-router-dom";
 import './App.css';
-import QRDisplay from './components/QRDisplay';
+import SocketContainer from './components/SocketContainer';
 import PostComment from './components/PostComment';
-import socketIOClient from 'socket.io-client';
-
-const ENDPOINT = 'http://localhost:3002';
-export const socket = socketIOClient(ENDPOINT);
 
 function App() {
   return (
@@ -20,7 +16,7 @@ function App() {
         <PostComment />
       </Route>
       <Route exact={true} path='/'>
-        <QRDisplay />
+        <SocketContainer />
       </Route>
     </Router>
   );

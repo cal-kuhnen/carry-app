@@ -23,7 +23,12 @@ const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(route);
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -137,6 +142,7 @@ const addComment = async (socket: Socket, newComment: Comment) => {
 
     console.log(`Added comment with id: ${result.insertedId}`);
 
+    // get 10 most recent comments to display on page after adding new
     let commentArray = await collection.find().sort({_id:-1}).limit(10).toArray();
     let commentList = JSON.parse(JSON.stringify(commentArray));
     socket.emit('test', commentList);
@@ -149,8 +155,8 @@ const addComment = async (socket: Socket, newComment: Comment) => {
   }
 }
 
-app.use(express.static("build"));
-app.use("/post", express.static("build"));
+//app.use(express.static("build"));
+//app.use("/post", express.static("build"));
 server.listen(PORT, () => {
   console.log(`[server]: Server is running at https://localhost:${PORT}`);
 });

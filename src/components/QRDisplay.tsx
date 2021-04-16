@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { socket } from '../App';
 
 const baseURL = 'https://instagram.com/';
+
+interface QRProps {
+  username: string;
+}
 
 // Create QR code for the link to the instagram page
 const generateQR = async (text:string) => {
@@ -12,32 +15,20 @@ const generateQR = async (text:string) => {
   }
   catch (err) {
     console.error(err);
-    return 'error';
+    return ('error');
   }
 }
 
-const QRDisplay = () => {
-  const [uName, setUname] = useState('no data');
+const QRDisplay = (props: QRProps) => {
   const [qr, setQR] = useState('');
 
   useEffect(() => {
-    if (uName === '' || uName === 'no data') {
-      socket.emit('give-qr');
-    }
-    socket.on('change', async data => {
-      setUname(data);
-      console.log(baseURL + data);
-      setQR(await generateQR(baseURL + data));
-    });
-    return () => {
-      console.log('cleanup');
-
-    }
+    let createQR = async () => setQR(await generateQR(baseURL + props.username));
   });
 
   return (
     <div className='QRCode'>
-      {uName}
+      {props.username}
       <img src={qr} alt='QR code for instagram link'></img>
     </div>
   )
