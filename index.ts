@@ -74,8 +74,8 @@ const checkUname = (socket:Socket) => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
-        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
+        await page.type('input[name="username"]', process.env['INSTA_USERNAME']);
+        await page.type('input[name="password"]', process.env['INSTA_PASSWORD']);
         await page.click('button[type="submit"]');
 
         // Waiting for page to refresh
@@ -122,8 +122,8 @@ const postComment = (socket: Socket, toPost: Comment) => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', process.env.INSTA_USER);
-        await page.type('input[name="password"]', process.env.INSTA_PASS);
+        await page.type('input[name="username"]', process.env['INSTA_USERNAME']);
+        await page.type('input[name="password"]', process.env['INSTA_PASSWORD']);
         await page.click('button[type="submit"]');
 
         // Waiting for page to refresh
