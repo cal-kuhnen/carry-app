@@ -82,6 +82,7 @@ const checkUname = (socket:Socket) => {
   console.log('check uname in progress');
   puppeteer
     .use(StealthPlugin())
+    // @ts-ignore
     .launch({ args: ['--no-sandbox']})
     .then(async browser => {
       try {
@@ -129,6 +130,7 @@ const postComment = (socket: Socket, toPost: Comment) => {
   console.log('posting comment');
   puppeteer
     .use(StealthPlugin())
+    // @ts-ignore
     .launch({ args: ['--no-sandbox']})
     .then(async browser => {
       try {
