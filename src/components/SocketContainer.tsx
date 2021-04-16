@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import socketIOClient from 'socket.io-client';
 import QRDisplay from './QRDisplay';
 import CommentDisplay from './CommentDisplay';
+import PostComment from './PostComment';
 
 const ENDPOINT = 'http://localhost:3002';
 export const socket = socketIOClient(ENDPOINT);
 
 const SocketContainer = () => {
   const [uName, setUname] = useState('');
+  const [commentList, setCommentList] = useState([{_id:'', link:'', comment:'', time:''}]);
 
   useEffect(() => {
     if (uName === '') {
@@ -16,8 +18,8 @@ const SocketContainer = () => {
     socket.on('change', data => {
       setUname(data);
     });
-    socket.on('cList', () => {
-      console.log('why is this happening');
+    socket.on('cList', comments => {
+      setCommentList(comments);
     });
     return () => {
       console.log('cleanup');
@@ -29,7 +31,7 @@ const SocketContainer = () => {
   return (
     <>
       <QRDisplay username={uName} />
-      <CommentDisplay />
+      <CommentDisplay comments={commentList}/>
     </>
   )
 }

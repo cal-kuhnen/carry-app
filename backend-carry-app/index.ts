@@ -18,7 +18,6 @@ interface Comment {
 const MongoClient = mongodb.MongoClient;
 const uri = `mongodb+srv://dbAdminCal:${mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
-
 const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(route);
@@ -126,6 +125,7 @@ const postComment = (socket: Socket, toPost: Comment) => {
         console.log('comment posted');
       } catch (err) {
         console.error(err);
+        socket.emit('cList');
       } finally {
         await browser.close();
       }
@@ -145,7 +145,7 @@ const addComment = async (socket: Socket, newComment: Comment) => {
     // get 10 most recent comments to display on page after adding new
     let commentArray = await collection.find().sort({_id:-1}).limit(10).toArray();
     let commentList = JSON.parse(JSON.stringify(commentArray));
-    socket.emit('test', commentList);
+    io.sockets.emit('cList', commentList);
     console.log('sending comment list');
 
   } catch (err) {

@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
-const CommentDisplay = () => {
-  const [commentList, setCommentList] = useState([{_id:0, comment:""}]);
+interface Comment {
+  _id: string;
+  link: string;
+  comment: string;
+  time: string;
+}
 
-  let displayComments = commentList.map((comment) => {
+interface CommentProps {
+  comments: Array<Comment>;
+}
+
+const CommentDisplay = (props: CommentProps) => {
+
+  let displayComments = props.comments.map((comment) => {
     return (
       <div key={comment._id}>{comment.comment}</div>
     )

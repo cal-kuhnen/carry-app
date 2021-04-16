@@ -22,8 +22,10 @@ const generateQR = async (text:string) => {
 const QRDisplay = (props: QRProps) => {
   const [qr, setQR] = useState('');
 
+  let createQR = async () => setQR(await generateQR(baseURL + props.username));
+
   useEffect(() => {
-    let createQR = async () => setQR(await generateQR(baseURL + props.username));
+    createQR();
   });
 
   return (
