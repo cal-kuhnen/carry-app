@@ -27,6 +27,7 @@ declare global {
 
 const query = "https://www.instagram.com/graphql/query/?query_hash=c9100bf9110dd6361671f113dd02e7d6&variables={%22user_id%22:%222010715942%22,%22include_chaining%22:false,%22include_reel%22:true,%22include_suggested_users%22:false,%22include_logged_out_extras%22:false,%22include_highlight_reels%22:false,%22include_related_profiles%22:false}";
 const cookiesFilePath = 'cookies.json';
+const insta = 'https://www.instagram.com/';
 
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
@@ -48,12 +49,20 @@ let response: string|null = 'none';
 let instaInfo: any = {};
 let currUname = '';
 let pingUname: any;
+let pingFollow: any;
+let currFollowers = 0;
+let currFollowing = 0;
 
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
+  instaLogin();
+
   clearInterval(pingUname);
-  pingUname = setInterval(checkUname, 120000, socket);
+  pingUname = setInterval(checkUname, 30000, socket);
+
+  clearInterval(pingFollow);
+  pingFollow = setInterval(checkFollow, 40000);
 
   socket.on('give-qr', () => {
     console.log('giving qr');
@@ -73,6 +82,7 @@ io.on("connection", (socket:Socket) => {
   socket.on("disconnect", () => {
     console.log("user disconnected");
     clearInterval(pingUname);
+    clearInterval(pingFollow);
   });
 });
 
@@ -126,9 +136,8 @@ const checkUname = (socket:Socket) => {
         const parsedCookies = JSON.parse(cookiesString.toString());
         if (parsedCookies.length !== 0) {
           for (let cookie of parsedCookies) {
-            await page.setCookie(cookie)
+            await page.setCookie(cookie);
           }
-          console.log('Session has been loaded in the browser')
         }
         await page.goto(query);
         await page.waitForTimeout(2000);
@@ -159,7 +168,6 @@ const checkUname = (socket:Socket) => {
     });
 }
 
-
 // Posts a comment to linked instagram post from the art account
 const postComment = (socket: Socket, toPost: Comment) => {
   console.log('posting comment');
@@ -175,9 +183,8 @@ const postComment = (socket: Socket, toPost: Comment) => {
         const parsedCookies = JSON.parse(cookiesString.toString());
         if (parsedCookies.length !== 0) {
           for (let cookie of parsedCookies) {
-            await page.setCookie(cookie)
+            await page.setCookie(cookie);
           }
-          console.log('Session has been loaded in the browser')
         }
 
         // Navigate to post and submitting the comment
@@ -233,6 +240,42 @@ const returnComments = async (socket: Socket) => {
   } finally {
     await client.close();
   }
+}
+
+const checkFollow = () => {
+  console.log('getting followers/following');
+  puppeteer
+    .use(StealthPlugin())
+    // @ts-ignore
+    .launch({ args: ['--no-sandbox']})
+    .then(async browser => {
+      try {
+        // load cookies for login info
+        const page = await browser.newPage();
+        const cookiesString = fs.readFileSync(cookiesFilePath);
+        const parsedCookies = JSON.parse(cookiesString.toString());
+        if (parsedCookies.length !== 0) {
+          for (let cookie of parsedCookies) {
+            await page.setCookie(cookie);
+          }
+        }
+
+        // Extract follow numbers
+        await page.goto(insta + config.username);
+        await page.waitForSelector('ul > li.Y8-fY');
+        let stats = await page.$$('.Y8-fY');
+        await stats[1].click();
+        await page.waitForTimeout(2000);
+        let test = await page.$eval('a.FPmhX', element => {
+          return element.innerHTML;
+        });
+        console.log(test);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        await browser.close();
+      }
+    });
 }
 
 
