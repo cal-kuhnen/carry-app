@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-interface Comment {
+export interface Comment {
   _id: string;
   link: string;
   comment: string;

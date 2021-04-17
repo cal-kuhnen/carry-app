@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import socketIOClient from 'socket.io-client';
 import QRDisplay from './QRDisplay';
-import CommentDisplay from './CommentDisplay';
+import CommentDisplay, { Comment } from './CommentDisplay';
 import PostComment from './PostComment';
 
 const ENDPOINT = 'http://localhost:3002';
 export const socket = socketIOClient(ENDPOINT);
-const emptyComments = [{_id:'', link:'', comment:'', time:''}];
+const emptyComments: Array<Comment> = [{_id:'', link:'', comment:'', time:''}];
 
 const SocketContainer = () => {
   const [uName, setUname] = useState('');
   const [commentList, setCommentList] = useState(emptyComments);
+  const [followerList, setFollowerList] = useState()
 
   useEffect(() => {
     if (uName === '') {
