@@ -15,6 +15,11 @@ interface Comment {
   time?: string;
 }
 
+interface InstaUser {
+  img: string;
+  username: string;
+}
+
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
@@ -242,6 +247,7 @@ const returnComments = async (socket: Socket) => {
   }
 }
 
+// Check follower and following count, and update lists accordingly
 const checkFollow = () => {
   console.log('getting followers/following');
   puppeteer
@@ -263,9 +269,31 @@ const checkFollow = () => {
         // Extract follow numbers
         await page.goto(insta + config.username);
         await page.waitForSelector('ul > li.Y8-fY');
-        let stats = await page.$$('.Y8-fY');
-        await stats[1].click();
-        await page.waitForTimeout(2000);
+        let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt(x.innerHTML)));
+        let followerCount = stats[1]; // the second span of class g47SY is followers
+
+        // check for new followers, only need to show 12 most recent
+        if (followerCount > currFollowers) {
+          let links = await page.$$('.Y8-fY');
+          await links[1].click(); // click on followers link (cannot be accessed as link)
+          await page.waitForTimeout(500);
+          let diff = followerCount - currFollowers;
+          if (diff > 12) {
+            let followerDivs = await page.$$('div.PZuss > li');
+            let followerList: Array<InstaUser> = [];
+            for (const element of followerDivs) {
+              let image = await element.$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
+              let username = await element.$eval('a.FPmhX', (el: any) => el.innerHTML);
+              let follower: InstaUser = {
+                img: image,
+                username: username
+              };
+              followerList.push(follower);
+            }
+            console.log(followerList[0]);
+          }
+        }
+
         let test = await page.$eval('a.FPmhX', element => {
           return element.innerHTML;
         });
