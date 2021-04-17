@@ -64,7 +64,7 @@ io.on("connection", (socket:Socket) => {
   instaLogin();
 
   clearInterval(pingUname);
-  pingUname = setInterval(checkUname, 30000, socket);
+  pingUname = setInterval(checkUname, 60000, socket);
 
   clearInterval(pingFollow);
   pingFollow = setInterval(checkFollow, 40000);
@@ -265,22 +265,28 @@ const checkFollow = () => {
             await page.setCookie(cookie);
           }
         }
-
         // Extract follow numbers
         await page.goto(insta + config.username);
         await page.waitForSelector('ul > li.Y8-fY');
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt(x.innerHTML)));
         let followerCount = stats[1]; // the second span of class g47SY is followers
+        let followingCount = stats[2]; // third span is following (first is posts)
+        console.log(`Followers: ${followerCount}, Following: ${followingCount}`);
+        let links = await page.$$('.Y8-fY');
 
         // check for new followers, only need to show 12 most recent
         if (followerCount > currFollowers) {
-          let links = await page.$$('.Y8-fY');
           await links[1].click(); // click on followers link (cannot be accessed as link)
           await page.waitForTimeout(500);
           let diff = followerCount - currFollowers;
-          if (diff > 12) {
-            let followerDivs = await page.$$('div.PZuss > li');
-            let followerList: Array<InstaUser> = [];
+          let followerDivs = await page.$$('div.PZuss > li');
+          let followerList: Array<InstaUser> = [];
+
+          // Instagram returns the 12 most recent followers, the max the app
+          // will display. Therefore just grab all 12 if there have been 12 or
+          // more new follows.
+          if (diff >= 12) {
+            // creates array of InstaUser objects and sends them to database
             for (const element of followerDivs) {
               let image = await element.$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
               let username = await element.$eval('a.FPmhX', (el: any) => el.innerHTML);
@@ -292,12 +298,63 @@ const checkFollow = () => {
             }
             console.log(followerList[0]);
           }
+          // Less than 12 new followers means just adding the exact amount of
+          // new followers.
+          else {
+            // creates array of InstaUser objects and sends them to database
+            for (let i = 0; i < diff; i++) {
+              let image = await followerDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
+              let username = await followerDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
+              let follower: InstaUser = {
+                img: image,
+                username: username
+              };
+              followerList.push(follower);
+            }
+            console.log(followerList[0]);
+          }
+          currFollowers = followerCount;
+          await page.click('div.QBdPU');
         }
 
-        let test = await page.$eval('a.FPmhX', element => {
-          return element.innerHTML;
-        });
-        console.log(test);
+        // Now do the same for following... :(
+        if (followingCount > currFollowing) {
+          let links = await page.$$('.Y8-fY');
+          await links[2].click(); // click on following link (cannot be accessed as link)
+          await page.waitForTimeout(500);
+          let diff = followingCount - currFollowing;
+          let followingDivs = await page.$$('div.PZuss > li');
+          let followingList: Array<InstaUser> = [];
+
+          // Instagram returns the 12 most recent following as well.
+          if (diff >= 12) {
+            // creates array of InstaUser objects and sends them to database
+            for (const element of followingDivs) {
+              let image = await element.$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
+              let username = await element.$eval('a.FPmhX', (el: any) => el.innerHTML);
+              let following: InstaUser = {
+                img: image,
+                username: username
+              };
+              followingList.push(following);
+            }
+            console.log(followingList[0]);
+          }
+          else {
+            // creates array of InstaUser objects and sends them to database
+            for (let i = 0; i < diff; i++) {
+              let image = await followingDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
+              let username = await followingDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
+              let following: InstaUser = {
+                img: image,
+                username: username
+              };
+              followingList.push(following);
+            }
+            console.log(followingList[0]);
+          }
+          currFollowing = followingCount;
+        }
       } catch (err) {
         console.error(err);
       } finally {
