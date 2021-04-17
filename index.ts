@@ -227,7 +227,7 @@ const addComment = async (socket: Socket, newComment: Comment) => {
   }
 }
 
-// Returns last 10 comments, emits event for front end to update
+// Returns last 15 comments, emits event for front end to update
 const returnComments = async (socket: Socket) => {
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   try {
@@ -248,7 +248,7 @@ const returnComments = async (socket: Socket) => {
 }
 
 // Check follower and following count, and update lists accordingly
-const checkFollow = () => {
+const checkFollow = (socket: Socket) => {
   console.log('getting followers/following');
   puppeteer
     .use(StealthPlugin())
@@ -296,7 +296,7 @@ const checkFollow = () => {
               };
               followerList.push(follower);
             }
-            console.log(followerList[0]);
+            updateFollowers(followerList);
           }
           // Less than 12 new followers means just adding the exact amount of
           // new followers.
@@ -311,9 +311,10 @@ const checkFollow = () => {
               };
               followerList.push(follower);
             }
-            console.log(followerList[0]);
+            updateFollowers(followerList);
           }
           currFollowers = followerCount;
+          io.sockets.emit('follower-number', currFollowers);
           await page.click('div.QBdPU');
         }
 
@@ -338,7 +339,6 @@ const checkFollow = () => {
               };
               followingList.push(following);
             }
-            console.log(followingList[0]);
           }
           else {
             // creates array of InstaUser objects and sends them to database
@@ -354,6 +354,7 @@ const checkFollow = () => {
             console.log(followingList[0]);
           }
           currFollowing = followingCount;
+          io.sockets.emit('following-number', currFollowing);
         }
       } catch (err) {
         console.error(err);
@@ -362,6 +363,42 @@ const checkFollow = () => {
       }
     });
 }
+
+const updateFollowers = async (fList: Array<InstaUser>) => {
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+  try {
+    await client.connect();
+    let collection = client.db('insta_test').collection('followers');
+    await collection.createIndex({ username: 1 }, { unique: true });
+    const result = await collection.insertMany(fList);
+    console.log('added followers');
+
+    returnFollowers();
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    await client.close();
+  }
+}
+
+const returnFollowers = async () => {
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+  try {
+    await client.connect();
+    let collection = client.db('insta_test').collection('followers');
+    let followerArray = await collection.find().sort({_id:-1}).limit(12).toArray();
+    let followerList = JSON.parse(JSON.stringify(followerArray));
+    io.sockets.emit('fList', followerArray);
+    console.log('sending follower list');
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    await client.close();
+  }
+}
+
 
 
 // app.get('*', (req, res) => {
