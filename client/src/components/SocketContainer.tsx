@@ -4,8 +4,8 @@ import QRDisplay from './QRDisplay';
 import CommentDisplay from './CommentDisplay';
 import PostComment from './PostComment';
 
-//const ENDPOINT = 'http://localhost:3002';
-export const socket = socketIOClient();
+const ENDPOINT = 'http://localhost:3002';
+export const socket = socketIOClient(ENDPOINT);
 const emptyComments = [{_id:'', link:'', comment:'', time:''}];
 
 const SocketContainer = () => {
