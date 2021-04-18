@@ -26,7 +26,8 @@ const PostComment = () => {
     let toPost: Comment = {
       link: link,
       comment: comment,
-      time: time
+      time: time,
+      img: ''
     };
     console.log(toPost);
     socket.emit('post-comment', toPost);

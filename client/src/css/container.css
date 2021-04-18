@@ -12,3 +12,7 @@
   font-weight: 500;
   margin-top: 10px;
 }
+
+img[src=""] {
+    display: none;
+}

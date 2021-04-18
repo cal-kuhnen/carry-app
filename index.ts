@@ -59,10 +59,11 @@ let currPosts = 0;
 let currFollowers = 0;
 let currFollowing = 0;
 
+instaLogin();
+
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
-  instaLogin();
   checkUname(socket);
 
   clearInterval(pingUname);
@@ -82,7 +83,6 @@ io.on("connection", (socket:Socket) => {
 
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
-    addComment(socket, toPost);
     postComment(socket, toPost);
   });
 
@@ -216,6 +216,9 @@ const postComment = (socket: Socket, toPost: Comment) => {
         await page.type('textarea', toPost.comment);
 
         await page.click('button[type="submit"]');
+        let image = await page.$eval('img.FFVAD', (el: any) => el.getAttribute('src'));
+        toPost.img = image;
+        addComment(socket, toPost);
         console.log('comment posted');
       } catch (err) {
         console.error(err);
