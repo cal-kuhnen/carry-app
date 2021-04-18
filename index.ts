@@ -454,9 +454,9 @@ const checkPostsMilestone = (postNumber: number) => {
   }
 }
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname+'/client/build/index.html'));
-// });
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+});
 
 server.listen(PORT, () => {
   console.log(`[server]: Server is running at https://localhost:${PORT}`);
