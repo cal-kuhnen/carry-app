@@ -13,7 +13,21 @@
   margin-top: 10px;
 }
 
+.post-container {
+  display: flex;
+  height: 100%;
+  align-items: flex-start;
+}
+
+img.post-image {
+  border-radius: 5px;
+  width: 50px;
+  margin-top: 2px;
+}
+
 .comment {
+  display: flex;
+  align-items: flex-start;
   background-color: #fff;
   border-radius: 5px;
   margin-top: 10px;
@@ -22,6 +36,10 @@
   padding-right: 10px;
   padding-top: 5px;
   padding-bottom: 5px;
+}
+
+.comment-content {
+  margin-left: 10px;
 }
 
 .comment-time {

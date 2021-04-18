@@ -60,8 +60,6 @@ let currPosts = 0;
 let currFollowers = 0;
 let currFollowing = 0;
 
-instaLogin();
-
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
@@ -143,6 +141,7 @@ const instaLogin = () => {
         }
       });
 }
+instaLogin(); // login on server startup
 
 // Use puppeteer to access instagram graphql query because using axios results
 // in bot detection and a redirect from instagram.
