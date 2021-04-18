@@ -90,6 +90,14 @@ io.on("connection", (socket:Socket) => {
     returnFollow('following');
   })
 
+  socket.on('give-follower-num', () => {
+    socket.emit('num-follower', currFollowers);
+  })
+
+  socket.on('give-following-num', () => {
+    socket.emit('num-following', currFollowing);
+  })
+
   socket.on("disconnect", () => {
     console.log("user disconnected");
     clearInterval(pingUname);

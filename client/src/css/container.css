@@ -1,25 +1,14 @@
-@font-face
-{
-	font-family: "Tex";
-	src: url("../fonts/texgyreheros-bold.otf");
-	font-weight: bold;
-}
-
-@font-face
-{
-	font-family: "Tex";
-	src: url("../fonts/texgyreheros-regular.otf");
-}
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500&display=swap');
 
 .container {
   display: flex;
   justify-content: space-evenly;
   top: 20px;
-  font-family: "Tex", sans-serif;
+  font-family: "Heebo", sans-serif;
 }
 
 .title {
   font-size: 2em;
-  font-weight: bold;
+  font-weight: 500;
   margin-top: 10px;
 }

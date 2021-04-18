@@ -16,8 +16,8 @@ const SocketContainer = () => {
   const [commentList, setCommentList] = useState(emptyComments);
   const [followerList, setFollowerList] = useState(emptyFollow);
   const [followingList, setFollowingList] = useState(emptyFollow);
-  const [followerNum, setFollowerNum] = useState(0);
-  const [followingNum, setFollowingNum] = useState(0);
+  const [followerNum, setFollowerNum] = useState(-1);
+  const [followingNum, setFollowingNum] = useState(-1);
 
   useEffect(() => {
     if (uName === '') {
@@ -32,12 +32,21 @@ const SocketContainer = () => {
     if (followingList === emptyFollow) {
       socket.emit('give-following');
     }
+    if (followerNum === -1) {
+      socket.emit('give-follower-num');
+    }
+    if (followingNum === -1) {
+      socket.emit('give-following-num');
+    }
 
     socket.on('change', data => {
       setUname(data);
     });
     socket.on('cList', comments => {
       setCommentList(comments);
+      console.log('playing audio...');
+      let audio = new Audio('../audio/comment.mp3');
+      audio.play();
     });
     socket.on('followers', followers => {
       setFollowerList(followers);
