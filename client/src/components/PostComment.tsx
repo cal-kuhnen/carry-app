@@ -6,6 +6,7 @@ interface Comment {
   link: string;
   comment: string;
   time: string;
+  img?: string;
 }
 
 const PostComment = () => {

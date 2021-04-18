@@ -13,6 +13,7 @@ interface Comment {
   link: string;
   comment: string;
   time?: string;
+  img?: string;
 }
 
 interface InstaUser {
