@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-import { config, mongoInfo } from './config';
+//import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
@@ -42,13 +42,13 @@ const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(express.static(path.join(__dirname, 'client/build')));
 const server = http.createServer(app);
-const io = new Server(server,
-{
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
-});
+const io = new Server(server);
+// {
+//   cors: {
+//     origin: "http://localhost:3000",
+//     methods: ["GET", "POST"]
+//   }
+// }
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -61,6 +61,9 @@ let currFollowing = 0;
 
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
+
+  checkUname(socket);
+  instaLogin();
 
   clearInterval(pingUname);
   pingUname = setInterval(checkUname, 120000, socket);
@@ -142,7 +145,7 @@ const instaLogin = () => {
 
 // Use puppeteer to access instagram graphql query because using axios results
 // in bot detection and a redirect from instagram.
-const checkUname = (socket:Socket) => {
+const checkUname = async (socket:Socket) => {
   console.log('check uname in progress');
   puppeteer
     .use(StealthPlugin())
@@ -288,12 +291,11 @@ const checkFollow = (socket: Socket) => {
         checkPostsMilestone(postsCount);
         let followerCount = stats[1]; // the second span of class g47SY is followers
         let followingCount = stats[2]; // third span is following (first is posts)
-        console.log(`Followers: ${followerCount}, Following: ${followingCount}`);
         let links = await page.$$('.Y8-fY');
 
         // check for new followers, only need to show 12 most recent
         if (followerCount > currFollowers) {
-          if ((followerNum % 100) < (currFollowers % 100)) {
+          if ((followerCount % 100) < (currFollowers % 100)) {
             io.sockets.emit('100-posts');
           }
           await links[1].click(); // click on followers link (cannot be accessed as link)
@@ -402,7 +404,6 @@ const updateFollow = async (fList: Array<InstaUser>, coll: string) => {
     let collection = client.db('insta_test').collection(coll);
     await collection.createIndex({ username: 1 }, { unique: true });
     const result = await collection.insertMany(fList);
-    console.log('added followers');
 
     returnFollow(coll);
 
@@ -423,12 +424,11 @@ const returnFollow = async (coll: string) => {
 
     if (coll === 'followers') {
       io.sockets.emit('followers', followArray);
-      console.log('sending follower list');
     }
     else {
       io.sockets.emit('following', followArray);
-      console.log('sending follower list');
     }
+    console.log(`sending ${coll} list`);
 
   } catch (err) {
     console.error(err);

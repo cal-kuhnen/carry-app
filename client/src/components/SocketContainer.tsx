@@ -6,8 +6,8 @@ import PostComment from './PostComment';
 import FollowInfo, { InstaUser } from './FollowInfo';
 import '../css/container.css';
 
-const ENDPOINT = 'http://localhost:3002';
-export const socket = socketIOClient(ENDPOINT);
+//const ENDPOINT = 'http://localhost:3002';
+export const socket = socketIOClient();
 const emptyComments: Array<Comment> = [{_id:'', link:'', comment:'', time:''}];
 const emptyFollow: Array<InstaUser> = [{_id:'', username:'', img:''}];
 
@@ -96,6 +96,8 @@ const SocketContainer = () => {
       socket.off('num-follower');
       socket.off('num-following');
       socket.off('follower-loss');
+      socket.off('100-posts');
+      socket.off('1000-posts');
     }
   }, [uName]);
 
