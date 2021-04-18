@@ -3,15 +3,20 @@ import socketIOClient from 'socket.io-client';
 import QRDisplay from './QRDisplay';
 import CommentDisplay, { Comment } from './CommentDisplay';
 import PostComment from './PostComment';
+import FollowInfo, { InstaUser } from './FollowInfo';
 
 const ENDPOINT = 'http://localhost:3002';
 export const socket = socketIOClient(ENDPOINT);
 const emptyComments: Array<Comment> = [{_id:'', link:'', comment:'', time:''}];
+const emptyFollow: Array<InstaUser> = [{_id:'', username:'', img:''}];
 
 const SocketContainer = () => {
   const [uName, setUname] = useState('');
   const [commentList, setCommentList] = useState(emptyComments);
-  const [followerList, setFollowerList] = useState()
+  const [followerList, setFollowerList] = useState(emptyFollow);
+  const [followingList, setFollowingList] = useState(emptyFollow);
+  const [followerNum, setFollowerNum] = useState(0);
+  const [followingNum, setFollowingNum] = useState(0);
 
   useEffect(() => {
     if (uName === '') {
@@ -20,16 +25,39 @@ const SocketContainer = () => {
     if (commentList === emptyComments) {
       socket.emit('give-comments');
     }
+    if (followerList === emptyFollow) {
+      socket.emit('give-followers');
+    }
+    if (followingList === emptyFollow) {
+      socket.emit('give-following');
+    }
+
     socket.on('change', data => {
       setUname(data);
     });
     socket.on('cList', comments => {
       setCommentList(comments);
     });
+    socket.on('followers', followers => {
+      setFollowerList(followers);
+    })
+    socket.on('following', following => {
+      setFollowingList(following);
+    })
+    socket.on('num-follower', num => {
+      setFollowerNum(num);
+    })
+    socket.on('num-following', num => {
+      setFollowingNum(num);
+    })
     return () => {
       console.log('cleanup');
       socket.off('change');
       socket.off('cList');
+      socket.off('followers');
+      socket.off('following');
+      socket.off('num-follower');
+      socket.off('num-following');
     }
   }, [uName]);
 
@@ -37,6 +65,7 @@ const SocketContainer = () => {
     <>
       <QRDisplay username={uName} />
       <CommentDisplay comments={commentList}/>
+      <FollowInfo followers={followerList} following={followingList} numFollowers={followerNum} numFollowing={followingNum} />
     </>
   )
 }

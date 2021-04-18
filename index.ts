@@ -74,13 +74,21 @@ io.on("connection", (socket:Socket) => {
 
   socket.on('give-comments', () => {
     returnComments(socket);
-  })
+  });
 
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
     addComment(socket, toPost);
     postComment(socket, toPost);
   });
+
+  socket.on('give-followers', () => {
+    returnFollow('followers');
+  })
+
+  socket.on('give-following', () => {
+    returnFollow('following');
+  })
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
@@ -314,7 +322,7 @@ const checkFollow = (socket: Socket) => {
             updateFollow(followerList, 'followers');
           }
           currFollowers = followerCount;
-          io.sockets.emit('follower-number', currFollowers);
+          io.sockets.emit('num-follower', currFollowers);
           await page.click('div.QBdPU');
         }
 
@@ -357,7 +365,7 @@ const checkFollow = (socket: Socket) => {
             updateFollow(followingList, 'following');
           }
           currFollowing = followingCount;
-          io.sockets.emit('following-number', currFollowing);
+          io.sockets.emit('num-following', currFollowing);
         }
       } catch (err) {
         console.error(err);
