@@ -8,6 +8,7 @@ import {
 import './App.css';
 import SocketContainer from './components/SocketContainer';
 import PostComment from './components/PostComment';
+import './reset.css';
 
 function App() {
   return (

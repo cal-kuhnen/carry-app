@@ -36,11 +36,11 @@ const FollowInfo = (props: FollowProps) => {
 
   return (
     <div className='follow-container'>
-      <h3 className='follow-title'>Followers: {props.numFollowers}</h3>
+      <h3 className='title'>Followers: {props.numFollowers}</h3>
       <div className='follow'>
         {displayFollowers}
       </div>
-      <h3 className='follow-title'>Following: {props.numFollowing}</h3>
+      <h3 className='title'>Following: {props.numFollowing}</h3>
       <div className='follow'>
         {displayFollowing}
       </div>

@@ -64,10 +64,10 @@ io.on("connection", (socket:Socket) => {
   instaLogin();
 
   clearInterval(pingUname);
-  pingUname = setInterval(checkUname, 60000, socket);
+  pingUname = setInterval(checkUname, 120000, socket);
 
   clearInterval(pingFollow);
-  pingFollow = setInterval(checkFollow, 40000);
+  pingFollow = setInterval(checkFollow, 60000);
 
   socket.on('give-qr', () => {
     console.log('giving qr');
@@ -326,6 +326,9 @@ const checkFollow = (socket: Socket) => {
           currFollowers = followerCount;
           io.sockets.emit('num-follower', currFollowers);
           await page.click('div.QBdPU');
+        } else if (followerCount < currFollowers) {
+          currFollowers = followerCount;
+          io.sockets.emit('num-follower', currFollowers);
         }
 
         // Now do the same for following... :(
@@ -368,6 +371,9 @@ const checkFollow = (socket: Socket) => {
           }
           currFollowing = followingCount;
           io.sockets.emit('num-following', currFollowing);
+        } else if (followingCount < currFollowing) {
+          currFollowers = followingCount;
+          io.sockets.emit('num-following', currFollowers);
         }
       } catch (err) {
         console.error(err);

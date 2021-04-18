@@ -4,8 +4,7 @@
   top: 20px;
 }
 
-.comment-container {
-  display: flex;
-  width: 25%;
-  justify-content: center;
+.title {
+  font-size: 1.5em;
+  font-weight: bold;
 }
