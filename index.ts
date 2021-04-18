@@ -30,7 +30,7 @@ declare global {
   }
 }
 
-const query = "https://www.instagram.com/graphql/query/?query_hash=c9100bf9110dd6361671f113dd02e7d6&variables={%22user_id%22:%222010715942%22,%22include_chaining%22:false,%22include_reel%22:true,%22include_suggested_users%22:false,%22include_logged_out_extras%22:false,%22include_highlight_reels%22:false,%22include_related_profiles%22:false}";
+const query = "https://www.instagram.com/graphql/query/?query_hash=c9100bf9110dd6361671f113dd02e7d6&variables={%22user_id%22:%2247200197285%22,%22include_chaining%22:false,%22include_reel%22:true,%22include_suggested_users%22:false,%22include_logged_out_extras%22:false,%22include_highlight_reels%22:false,%22include_related_profiles%22:false}";
 const cookiesFilePath = 'cookies.json';
 const insta = 'https://www.instagram.com/';
 
@@ -60,8 +60,6 @@ let currFollowing = 0;
 
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
-
-  instaLogin();
 
   clearInterval(pingUname);
   pingUname = setInterval(checkUname, 120000, socket);
@@ -373,6 +371,7 @@ const checkFollow = (socket: Socket) => {
           io.sockets.emit('num-following', currFollowing);
         } else if (followingCount < currFollowing) {
           currFollowers = followingCount;
+          console.log('sending following count');
           io.sockets.emit('num-following', currFollowers);
         }
       } catch (err) {

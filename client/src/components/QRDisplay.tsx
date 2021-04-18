@@ -32,7 +32,7 @@ const QRDisplay = (props: QRProps) => {
   return (
     <div className='qr-container'>
       <div className='qr-code'>
-        <h3 className='title'>Testing{props.username}</h3>
+        <h3 className='title'>{props.username}</h3>
         <div className='qr-backing'>
           <img className='qr-image' src={qr} alt='QR code for instagram link'></img>
         </div>
