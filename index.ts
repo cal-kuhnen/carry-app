@@ -55,6 +55,7 @@ let instaInfo: any = {};
 let currUname = '';
 let pingUname: any;
 let pingFollow: any;
+let currPosts = 0;
 let currFollowers = 0;
 let currFollowing = 0;
 
@@ -283,6 +284,8 @@ const checkFollow = (socket: Socket) => {
         await page.goto(insta + config.username);
         await page.waitForSelector('ul > li.Y8-fY');
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt(x.innerHTML)));
+        let postsCount = stats[0]; //first span is number of posts
+        checkPostsMilestone(postsCount);
         let followerCount = stats[1]; // the second span of class g47SY is followers
         let followingCount = stats[2]; // third span is following (first is posts)
         console.log(`Followers: ${followerCount}, Following: ${followingCount}`);
@@ -290,6 +293,9 @@ const checkFollow = (socket: Socket) => {
 
         // check for new followers, only need to show 12 most recent
         if (followerCount > currFollowers) {
+          if ((followerNum % 100) < (currFollowers % 100)) {
+            io.sockets.emit('100-posts');
+          }
           await links[1].click(); // click on followers link (cannot be accessed as link)
           await page.waitForTimeout(500);
           let diff = followerCount - currFollowers;
@@ -334,10 +340,10 @@ const checkFollow = (socket: Socket) => {
           await page.click('div.QBdPU');
         } else if (followerCount < currFollowers) {
           currFollowers = followerCount;
-          io.sockets.emit('num-follower', currFollowers);
+          io.sockets.emit('follower-loss', currFollowers);
         }
 
-        // Now do the same for following... :(
+        // Now do the same for following...
         if (followingCount > currFollowing) {
           let links = await page.$$('.Y8-fY');
           await links[2].click(); // click on following link (cannot be accessed as link)
@@ -379,8 +385,7 @@ const checkFollow = (socket: Socket) => {
           io.sockets.emit('num-following', currFollowing);
         } else if (followingCount < currFollowing) {
           currFollowers = followingCount;
-          console.log('sending following count');
-          io.sockets.emit('num-following', currFollowers);
+          io.sockets.emit('num-following-loss', currFollowers);
         }
       } catch (err) {
         console.error(err);
@@ -432,7 +437,22 @@ const returnFollow = async (coll: string) => {
   }
 }
 
+// emit sound for every 100 and 1000 posts
+const checkPostsMilestone = (postNumber: number) => {
+  if ((postNumber % 100) < (currPosts % 100)) {
+    io.sockets.emit('100-posts');
+    currPosts = postNumber;
+  } else {
+    currPosts = postNumber;
+  }
 
+  if ((postNumber % 1000) < (currPosts % 1000)) {
+    io.sockets.emit('1000-posts');
+    currPosts = postNumber;
+  } else {
+    currPosts = postNumber;
+  }
+}
 
 // app.get('*', (req, res) => {
 //   res.sendFile(path.join(__dirname+'/client/build/index.html'));

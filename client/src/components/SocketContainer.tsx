@@ -41,25 +41,52 @@ const SocketContainer = () => {
 
     socket.on('change', data => {
       setUname(data);
+      let audio = new Audio('../audio/UsernameChange.mp3');
+      audio.play();
     });
     socket.on('cList', comments => {
       setCommentList(comments);
-      console.log('playing audio...');
       let audio = new Audio('../audio/comment.mp3');
       audio.play();
     });
     socket.on('followers', followers => {
       setFollowerList(followers);
-    })
+    });
     socket.on('following', following => {
       setFollowingList(following);
-    })
-    socket.on('num-follower', num => {
+    });
+
+    // plays the new follower sound for each new follower with random delay
+    socket.on('num-follower', async num => {
+      let increase = num - followerNum;
       setFollowerNum(num);
-    })
+      let audio = new Audio('../audio/everynewfollower.mp3');
+      for (let i = 0; i < increase; i++) {
+        audio.play();
+        await new Promise(r => setTimeout(r, (Math.random() * (300 - 100) + 100)));
+      }
+    });
+
+    socket.on('follower-loss', num => {
+      setFollowerNum(num);
+      let audio = new Audio('../audio/everylostfollower.mp3');
+      audio.play();
+    });
+
     socket.on('num-following', num => {
       setFollowingNum(num);
     })
+
+    socket.on('100-posts', () => {
+      let audio = new Audio('../audio/every1000posts.mp3');
+      audio.play();
+    })
+
+    socket.on('1000-posts', () => {
+      let audio = new Audio('../audio/every100posts.mp3');
+      audio.play();
+    })
+
     return () => {
       console.log('cleanup');
       socket.off('change');
@@ -68,6 +95,7 @@ const SocketContainer = () => {
       socket.off('following');
       socket.off('num-follower');
       socket.off('num-following');
+      socket.off('follower-loss');
     }
   }, [uName]);
 
