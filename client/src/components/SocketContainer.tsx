@@ -4,6 +4,7 @@ import QRDisplay from './QRDisplay';
 import CommentDisplay, { Comment } from './CommentDisplay';
 import PostComment from './PostComment';
 import FollowInfo, { InstaUser } from './FollowInfo';
+import '../css/container.css';
 
 const ENDPOINT = 'http://localhost:3002';
 export const socket = socketIOClient(ENDPOINT);
@@ -62,11 +63,11 @@ const SocketContainer = () => {
   }, [uName]);
 
   return (
-    <>
+    <div className='container'>
       <QRDisplay username={uName} />
       <CommentDisplay comments={commentList}/>
       <FollowInfo followers={followerList} following={followingList} numFollowers={followerNum} numFollowing={followingNum} />
-    </>
+    </div>
   )
 }
 

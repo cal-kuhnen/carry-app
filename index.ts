@@ -61,6 +61,8 @@ let currFollowing = 0;
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
+  instaLogin();
+
   clearInterval(pingUname);
   pingUname = setInterval(checkUname, 60000, socket);
 

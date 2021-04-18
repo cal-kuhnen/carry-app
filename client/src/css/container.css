@@ -1,0 +1,11 @@
+.container {
+  display: flex;
+  justify-content: space-evenly;
+  top: 20px;
+}
+
+.comment-container {
+  display: flex;
+  width: 25%;
+  justify-content: center;
+}

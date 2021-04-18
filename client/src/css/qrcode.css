@@ -1,0 +1,19 @@
+.qr-container {
+  display: flex;
+  width: 25%;
+  justify-content: center;
+}
+
+.qr-code {
+  width: 50%;
+}
+
+.name {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+img.qr-image {
+  width: 100%;
+}

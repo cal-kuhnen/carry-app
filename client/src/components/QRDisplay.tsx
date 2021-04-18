@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
+import '../css/qrcode.css';
 
 const baseURL = 'https://instagram.com/';
 
@@ -29,9 +30,13 @@ const QRDisplay = (props: QRProps) => {
   });
 
   return (
-    <div className='QRCode'>
-      {props.username}
-      <img src={qr} alt='QR code for instagram link'></img>
+    <div className='qr-container'>
+      <div className='qr-code'>
+        <h2 className='name'>Testing{props.username}</h2>
+        <div className='qr-backing'>
+          <img className='qr-image' src={qr} alt='QR code for instagram link'></img>
+        </div>
+      </div>
     </div>
   )
 }

@@ -15,13 +15,15 @@ const CommentDisplay = (props: CommentProps) => {
 
   let displayComments = props.comments.map((comment) => {
     return (
-      <div key={comment._id}>{comment.comment}</div>
+      <div className='comment' key={comment._id}>{comment.comment}</div>
     )
   })
 
   return (
-    <div>
-    {displayComments}
+    <div className='comment-container'>
+      <div className='comment-tray'>
+        {displayComments}
+      </div>
     </div>
   )
 }
