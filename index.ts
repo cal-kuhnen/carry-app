@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-import { config, mongoInfo } from './config';
+//import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
@@ -42,19 +42,20 @@ const saved = '/saved/all-posts';
 
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
-const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS || mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const database = 'insta_test';
 
 const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(express.static(path.join(__dirname, 'client/build')));
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
-});
+const io = new Server(server);
+// {
+//   cors: {
+//     origin: "http://localhost:3000",
+//     methods: ["GET", "POST"]
+//   }
+// }
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -76,7 +77,6 @@ io.on("connection", (socket:Socket) => {
   returnComments(socket);
   returnFollow('followers');
   returnFollow('following');
-  //returnPosts('posts');
   socket.emit('quiet-change', currUname);
   socket.emit('num-follower', currFollowers);
   socket.emit('num-following', currFollowing);
@@ -118,8 +118,8 @@ const instaLogin = () => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', process.env.INSTA_USERNAME || config.username);
-        await page.type('input[name="password"]', process.env.INSTA_PASSWORD || config.password);
+        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
+        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
         await page.waitForNavigation();
         // get login cookies from session
@@ -431,46 +431,6 @@ const returnFollow = async (coll: string) => {
     }
     else {
       io.sockets.emit('following', followList);
-    }
-    console.log(`sending ${coll} list`);
-
-  } catch (err) {
-    console.error(err);
-  } finally {
-    await client.close();
-  }
-}
-
-const updatePosts = async (pList: Array<Post>, coll: string) => {
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  try {
-    await client.connect();
-    let collection = client.db(database).collection(coll);
-    await collection.createIndex({ img: 1 }, { unique: true });
-    const result = await collection.insertMany(pList);
-
-    returnPosts(coll);
-
-  } catch (err) {
-    console.error(err);
-  } finally {
-    await client.close();
-  }
-}
-
-const returnPosts = async (coll: string) => {
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  try {
-    await client.connect();
-    let collection = client.db(database).collection(coll);
-    let postsArray = await collection.find().sort({_id:-1}).limit(18).toArray();
-    let postsList = JSON.parse(JSON.stringify(postsArray));
-
-    if (coll === 'posts') {
-      io.sockets.emit('posts', postsArray);
-    }
-    else {
-      io.sockets.emit('saved', postsArray);
     }
     console.log(`sending ${coll} list`);
 
