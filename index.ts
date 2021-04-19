@@ -65,16 +65,20 @@ let pingFollow: any;
 let currPosts = 0;
 let currFollowers = 0;
 let currFollowing = 0;
+let baseFollowers = Array<InstaUser> = [{img:'', username:''}];
+let baseFollowing = Array<InstaUser> = [{img:'', username:''}];
 let basePosts: Array<Post> = [{img:''}];
 let baseSaved: Array<Post> = [{img:''}];
 
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
+  console.log(`Clients: ${socket.client.conn.server.clientsCount}`);
+
   console.log('giving qr');
   returnComments(socket);
-  returnFollow('followers');
-  returnFollow('following');
+  socket.emit('followers', baseFollowers);
+  socket.emit('following', baseFollowing);
   socket.emit('quiet-change', currUname);
   socket.emit('num-follower', currFollowers);
   socket.emit('num-following', currFollowing);
@@ -84,10 +88,10 @@ io.on("connection", (socket:Socket) => {
 
   if (socket.client.conn.server.clientsCount === 1) {
     clearInterval(pingUname);
-    pingUname = setInterval(checkUname, 90000, socket);
+    pingUname = setInterval(checkUname, 120000, socket);
 
     clearInterval(pingFollow);
-    pingFollow = setInterval(checkProfile, 40000);
+    pingFollow = setInterval(checkProfile, 60000);
   }
 
   socket.on('post-comment', (toPost: Comment) => {
@@ -319,19 +323,20 @@ const checkProfile = () => {
         let links = await page.$$('.Y8-fY');
 
         // check for new followers, only need to show 12 most recent
-        if (followerCount > currFollowers) {
-          if ((followerCount % 100) < (currFollowers % 100)) {
-            io.sockets.emit('100-followers');
+        if (followerCount != currFollowers) {
+          if (followerCount > currFollowers) {
+            if ((followerCount % 100) < (currFollowers % 100)) {
+              io.sockets.emit('100-followers');
+            }
           }
           await links[1].click(); // click on followers link (cannot be accessed as link)
           await page.waitForTimeout(500);
-          let diff = followerCount - currFollowers;
           let followerDivs = await page.$$('div.PZuss > li');
           let followerList: Array<InstaUser> = [];
 
           // Instagram returns the 12 most recent followers, the max the app
           // will display. Therefore just grab up to 12.
-          for (let i = 0; (i < diff) && (i < 12); i++) {
+          for (let i = 0; (i < followerDivs.length) && (i < 12); i++) {
             let image = await followerDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
             let username = await followerDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
             let follower: InstaUser = {
@@ -340,9 +345,10 @@ const checkProfile = () => {
             };
             followerList.push(follower);
           }
-          followerList.reverse();
-          updateFollow(followerList, 'followers');
+          //updateFollow(followerList, 'followers');
           currFollowers = followerCount;
+          baseFollowers = followerList;
+          io.sockets.emit('followers', baseFollowers);
           io.sockets.emit('num-follower', currFollowers);
           await page.click('div.QBdPU'); // close follower info
           await page.waitForTimeout(500);
@@ -353,16 +359,15 @@ const checkProfile = () => {
         }
 
         // Now do the same for following...
-        if (followingCount > currFollowing) {
+        if (followingCount != currFollowing) {
           let links = await page.$$('.Y8-fY');
           await links[2].click(); // click on following link (cannot be accessed as link)
           await page.waitForTimeout(500);
-          let diff = followingCount - currFollowing;
           let followingDivs = await page.$$('div.PZuss > li');
           let followingList: Array<InstaUser> = [];
 
           // creates array of InstaUser objects and sends them to database
-          for (let i = 0; (i < diff) && (i < 12); i++) {
+          for (let i = 0; (i < followingDivs.length) && (i < 12); i++) {
             let image = await followingDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
             let username = await followingDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
             let following: InstaUser = {
@@ -371,10 +376,10 @@ const checkProfile = () => {
             };
             followingList.push(following);
           }
-
-          followingList.reverse();
-          updateFollow(followingList, 'following');
+          //updateFollow(followingList, 'following');
           currFollowing = followingCount;
+          baseFollowing = followingList;
+          io.sockets.emit('following', baseFollowing);
           io.sockets.emit('num-following', currFollowing);
         }
         else if (followingCount < currFollowing) {
@@ -403,46 +408,6 @@ const checkProfile = () => {
         await browser.close();
       }
     });
-}
-
-const updateFollow = async (fList: Array<InstaUser>, coll: string) => {
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  try {
-    await client.connect();
-    let collection = client.db(database).collection(coll);
-    await collection.createIndex({ username: 1 }, { unique: true });
-    const result = await collection.insertMany(fList);
-
-    returnFollow(coll);
-
-  } catch (err) {
-    console.error(err);
-  } finally {
-    await client.close();
-  }
-}
-
-const returnFollow = async (coll: string) => {
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  try {
-    await client.connect();
-    let collection = client.db(database).collection(coll);
-    let followArray = await collection.find().sort({_id:-1}).limit(12).toArray();
-    let followList = JSON.parse(JSON.stringify(followArray));
-
-    if (coll === 'followers') {
-      io.sockets.emit('followers', followList);
-    }
-    else {
-      io.sockets.emit('following', followList);
-    }
-    console.log(`sending ${coll} list`);
-
-  } catch (err) {
-    console.error(err);
-  } finally {
-    await client.close();
-  }
 }
 
 // emit sound for every 100 and 1000 posts
