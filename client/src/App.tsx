@@ -15,8 +15,8 @@ import Saved from './components/Saved';
 import './reset.css';
 import './css/container.css';
 
-//const ENDPOINT = 'http://localhost:3002';
-export const socket = socketIOClient();
+const ENDPOINT = 'http://localhost:3002';
+export const socket = socketIOClient(ENDPOINT);
 const emptyComments: Array<Comment> = [{_id:'', link:'', comment:'', time:''}];
 const emptyFollow: Array<InstaUser> = [{_id:'', username:'', img:''}];
 const emptyPosts: Array<Post> = [{_id:'', img:''}];
@@ -38,20 +38,25 @@ const App = () => {
       let audio = new Audio('../audio/UsernameChange.mp3');
       audio.play();
     });
+    socket.on('quiet-change', data => {
+      setUname(data);
+    });
     socket.on('cList', comments => {
       setCommentList(comments);
+    });
+    socket.on('sound-cList', () => {
       let audio = new Audio('../audio/comment.mp3');
       audio.play();
     });
     socket.on('posts', posts => {
       setPostsList(posts);
-    })
+    });
     socket.on('num-posts', num => {
       setPostNum(num);
-    })
+    });
     socket.on('saved', saved => {
       setSavedList(saved);
-    })
+    });
     socket.on('followers', followers => {
       setFollowerList(followers);
     });
@@ -78,27 +83,29 @@ const App = () => {
 
     socket.on('num-following', num => {
       setFollowingNum(num);
-    })
+    });
 
     socket.on('100-followers', () => {
       let audio = new Audio('../audio/every100followers.mp3');
       audio.play();
-    })
+    });
 
     socket.on('100-posts', () => {
       let audio = new Audio('../audio/every1000posts.mp3');
       audio.play();
-    })
+    });
 
     socket.on('1000-posts', () => {
       let audio = new Audio('../audio/every100posts.mp3');
       audio.play();
-    })
+    });
 
     return () => {
       console.log('cleanup');
       socket.off('change');
+      socket.off('quiet-change');
       socket.off('cList');
+      socket.off('sound-cList');
       socket.off('posts');
       socket.off('post-num');
       socket.off('followers');
