@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import '../css/comments.css';
 
 export interface Comment {
@@ -18,7 +18,7 @@ const CommentDisplay = (props: CommentProps) => {
   let displayComments = props.comments.map((comment) => {
     return (
       <div className='comment' key={comment._id}>
-        <img className='post-image' src={comment.img}></img>
+        <img className='post-image' src={comment.img} alt='instagram post being commented on'></img>
         <div className='comment-content'>
           <div className='main'>{comment.comment}</div>
           <div className='comment-time'>{comment.time}</div>

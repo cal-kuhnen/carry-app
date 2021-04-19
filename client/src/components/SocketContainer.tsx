@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import socketIOClient from 'socket.io-client';
 import QRDisplay from './QRDisplay';
 import CommentDisplay, { Comment } from './CommentDisplay';
-import PostComment from './PostComment';
 import FollowInfo, { InstaUser } from './FollowInfo';
 import '../css/container.css';
 
-//const ENDPOINT = 'http://localhost:3002';
-export const socket = socketIOClient();
+const ENDPOINT = 'http://localhost:3002';
+export const socket = socketIOClient(ENDPOINT);
 const emptyComments: Array<Comment> = [{_id:'', link:'', comment:'', time:''}];
 const emptyFollow: Array<InstaUser> = [{_id:'', username:'', img:''}];
 
@@ -99,7 +98,7 @@ const SocketContainer = () => {
       socket.off('100-posts');
       socket.off('1000-posts');
     }
-  }, [uName]);
+  }, [uName, commentList, followerList, followingList, followerNum, followingNum]);
 
   return (
     <div className='container'>

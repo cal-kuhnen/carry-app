@@ -18,18 +18,18 @@ const FollowInfo = (props: FollowProps) => {
 
   let displayFollowers = props.followers.map((follower) => {
     return (
-      <div className='insta-user'>
-        <img className='user-icon' src={follower.img}></img>
-        <div className='username' key={follower._id}>{follower.username}</div>
+      <div className='insta-user' key={follower._id}>
+        <img className='user-icon' src={follower.img} alt='follower profile pic'></img>
+        <div className='username'>{follower.username}</div>
       </div>
     )
   });
 
   let displayFollowing = props.following.map((follow) => {
     return (
-      <div className='insta-user'>
-        <img className='user-icon' src={follow.img}></img>
-        <div className='username' key={follow._id}>{follow.username}</div>
+      <div className='insta-user' key={follow._id}>
+        <img className='user-icon' src={follow.img} alt='following profile pic'></img>
+        <div className='username'>{follow.username}</div>
       </div>
     )
   });

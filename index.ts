@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-//import { config, mongoInfo } from './config';
+import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
@@ -19,6 +19,10 @@ interface Comment {
 interface InstaUser {
   img: string;
   username: string;
+}
+
+interface Post {
+  img: string;
 }
 
 declare global {
@@ -37,19 +41,19 @@ const insta = 'https://www.instagram.com/';
 
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
-const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS || mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const database = 'carry_instagram';
 
 const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(express.static(path.join(__dirname, 'client/build')));
 const server = http.createServer(app);
-const io = new Server(server);
-// {
-//   cors: {
-//     origin: "http://localhost:3000",
-//     methods: ["GET", "POST"]
-//   }
-// }
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -69,7 +73,7 @@ io.on("connection", (socket:Socket) => {
   pingUname = setInterval(checkUname, 90000, socket);
 
   clearInterval(pingFollow);
-  pingFollow = setInterval(checkFollow, 40000);
+  pingFollow = setInterval(checkProfile, 40000);
 
   socket.on('give-qr', () => {
     console.log('giving qr');
@@ -103,8 +107,11 @@ io.on("connection", (socket:Socket) => {
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
-    clearInterval(pingUname);
-    clearInterval(pingFollow);
+    console.log(`clients: ${socket.client.conn.server.clientsCount}`);
+    if (socket.client.conn.server.clientsCount === 0) {
+      clearInterval(pingUname);
+      clearInterval(pingFollow);
+    }
   });
 });
 
@@ -121,8 +128,8 @@ const instaLogin = () => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
-        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
+        await page.type('input[name="username"]', process.env.INSTA_USERNAME || config.username);
+        await page.type('input[name="password"]', process.env.INSTA_PASSWORD || config.password);
         await page.click('button[type="submit"]');
         await page.waitForNavigation();
         // get login cookies from session
@@ -234,7 +241,7 @@ const addComment = async (socket: Socket, newComment: Comment) => {
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   try {
     await client.connect();
-    let collection = client.db('insta_test').collection('comments');
+    let collection = client.db(database).collection('comments');
     const result = await collection.insertOne(newComment);
 
     console.log(`Added comment with id: ${result.insertedId}`);
@@ -253,7 +260,7 @@ const returnComments = async (socket: Socket) => {
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   try {
     await client.connect();
-    let collection = client.db('insta_test').collection('comments');
+    let collection = client.db(database).collection('comments');
 
     // get 10 most recent comments to display on page after adding new
     let commentArray = await collection.find().sort({_id:-1}).limit(15).toArray();
@@ -269,7 +276,7 @@ const returnComments = async (socket: Socket) => {
 }
 
 // Check follower and following count, and update lists accordingly
-const checkFollow = (socket: Socket) => {
+const checkProfile = (socket: Socket) => {
   console.log('getting followers/following');
   puppeteer
     .use(StealthPlugin())
@@ -291,7 +298,9 @@ const checkFollow = (socket: Socket) => {
         await page.waitForSelector('ul > li.Y8-fY');
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt(x.innerHTML)));
         let postsCount = stats[0]; //first span is number of posts
-        checkPostsMilestone(postsCount);
+        if (postsCount > currPosts) {
+          checkPostsMilestone(postsCount);
+        }
         let followerCount = stats[1]; // the second span of class g47SY is followers
         let followingCount = stats[2]; // third span is following (first is posts)
         let links = await page.$$('.Y8-fY');
@@ -308,42 +317,23 @@ const checkFollow = (socket: Socket) => {
           let followerList: Array<InstaUser> = [];
 
           // Instagram returns the 12 most recent followers, the max the app
-          // will display. Therefore just grab all 12 if there have been 12 or
-          // more new follows.
-          if (diff >= 12) {
-            // creates array of InstaUser objects and sends them to database
-            for (const element of followerDivs) {
-              let image = await element.$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
-              let username = await element.$eval('a.FPmhX', (el: any) => el.innerHTML);
-              let follower: InstaUser = {
-                img: image,
-                username: username
-              };
-              followerList.push(follower);
-            }
-            followerList.reverse();
-            updateFollow(followerList, 'followers');
+          // will display. Therefore just grab up to 12.
+          for (let i = 0; (i < diff) && (i < 12); i++) {
+            let image = await followerDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
+            let username = await followerDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
+            let follower: InstaUser = {
+              img: image,
+              username: username
+            };
+            followerList.push(follower);
           }
-          // Less than 12 new followers means just adding the exact amount of
-          // new followers.
-          else {
-            // creates array of InstaUser objects and sends them to database
-            for (let i = 0; i < diff; i++) {
-              let image = await followerDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
-              let username = await followerDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
-              let follower: InstaUser = {
-                img: image,
-                username: username
-              };
-              followerList.push(follower);
-            }
-            followerList.reverse();
-            updateFollow(followerList, 'followers');
-          }
+          followerList.reverse();
+          updateFollow(followerList, 'followers');
           currFollowers = followerCount;
           io.sockets.emit('num-follower', currFollowers);
-          await page.click('div.QBdPU');
-        } else if (followerCount < currFollowers) {
+          await page.click('div.QBdPU'); // close follower info
+        }
+        else if (followerCount < currFollowers) {
           currFollowers = followerCount;
           io.sockets.emit('follower-loss', currFollowers);
         }
@@ -357,40 +347,24 @@ const checkFollow = (socket: Socket) => {
           let followingDivs = await page.$$('div.PZuss > li');
           let followingList: Array<InstaUser> = [];
 
-          // Instagram returns the 12 most recent following as well.
-          if (diff >= 12) {
-            // creates array of InstaUser objects and sends them to database
-            for (const element of followingDivs) {
-              let image = await element.$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
-              let username = await element.$eval('a.FPmhX', (el: any) => el.innerHTML);
-              let following: InstaUser = {
-                img: image,
-                username: username
-              };
-              followingList.push(following);
-            }
-            followingList.reverse();
-            updateFollow(followingList, 'following');
+          // creates array of InstaUser objects and sends them to database
+          for (let i = 0; (i < diff) && (i < 12); i++) {
+            let image = await followingDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
+            let username = await followingDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
+            let following: InstaUser = {
+              img: image,
+              username: username
+            };
+            followingList.push(following);
           }
-          else {
-            // creates array of InstaUser objects and sends them to database
-            for (let i = 0; i < diff; i++) {
-              let image = await followingDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
-              let username = await followingDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
-              let following: InstaUser = {
-                img: image,
-                username: username
-              };
-              followingList.push(following);
-            }
-            followingList.reverse();
-            updateFollow(followingList, 'following');
-          }
+
+          followingList.reverse();
+          updateFollow(followingList, 'following');
           currFollowing = followingCount;
           io.sockets.emit('num-following', currFollowing);
-        } else if (followingCount < currFollowing) {
+        }
+        else if (followingCount < currFollowing) {
           currFollowers = followingCount;
-          io.sockets.emit('num-following-loss', currFollowers);
         }
       } catch (err) {
         console.error(err);
@@ -404,7 +378,7 @@ const updateFollow = async (fList: Array<InstaUser>, coll: string) => {
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   try {
     await client.connect();
-    let collection = client.db('insta_test').collection(coll);
+    let collection = client.db(database).collection(coll);
     await collection.createIndex({ username: 1 }, { unique: true });
     const result = await collection.insertMany(fList);
 
@@ -421,7 +395,7 @@ const returnFollow = async (coll: string) => {
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   try {
     await client.connect();
-    let collection = client.db('insta_test').collection(coll);
+    let collection = client.db(database).collection(coll);
     let followArray = await collection.find().sort({_id:-1}).limit(12).toArray();
     let followList = JSON.parse(JSON.stringify(followArray));
 
@@ -445,21 +419,23 @@ const checkPostsMilestone = (postNumber: number) => {
   if ((postNumber % 100) < (currPosts % 100)) {
     io.sockets.emit('100-posts');
     currPosts = postNumber;
-  } else {
+  }
+  else {
     currPosts = postNumber;
   }
 
   if ((postNumber % 1000) < (currPosts % 1000)) {
     io.sockets.emit('1000-posts');
     currPosts = postNumber;
-  } else {
+  }
+  else {
     currPosts = postNumber;
   }
 }
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname+'/client/build/index.html'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname+'/client/build/index.html'));
+// });
 
 server.listen(PORT, () => {
   console.log(`[server]: Server is running at https://localhost:${PORT}`);

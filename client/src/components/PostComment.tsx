@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import socketIOClient from 'socket.io-client';
 import { socket } from './SocketContainer';
 
 interface Comment {

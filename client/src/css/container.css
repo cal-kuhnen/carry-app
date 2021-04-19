@@ -3,7 +3,7 @@
 .container {
   display: flex;
   justify-content: space-evenly;
-  top: 20px;
+  margin-top: 20px;
   font-family: "Heebo", sans-serif;
 }
 
