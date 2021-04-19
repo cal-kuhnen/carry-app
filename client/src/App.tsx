@@ -24,21 +24,13 @@ const App = () => {
   const [uName, setUname] = useState('');
   const [commentList, setCommentList] = useState(emptyComments);
   const [postsList, setPostsList] = useState(emptyPosts);
+  const [postNum, setPostNum] = useState(0);
   const [followerList, setFollowerList] = useState(emptyFollow);
   const [followingList, setFollowingList] = useState(emptyFollow);
   const [followerNum, setFollowerNum] = useState(0);
   const [followingNum, setFollowingNum] = useState(0);
 
   useEffect(() => {
-    socket.on('connect', () => {
-      socket.emit('give-qr');
-      socket.emit('give-comments');
-      socket.emit('give-followers');
-      socket.emit('give-following');
-      socket.emit('give-follower-num');
-      socket.emit('give-following-num');
-    });
-
     socket.on('change', data => {
       setUname(data);
       let audio = new Audio('../audio/UsernameChange.mp3');
@@ -51,6 +43,9 @@ const App = () => {
     });
     socket.on('posts', posts => {
       setPostsList(posts);
+    })
+    socket.on('num-posts', num => {
+      setPostNum(num);
     })
     socket.on('followers', followers => {
       setFollowerList(followers);
@@ -100,6 +95,7 @@ const App = () => {
       socket.off('change');
       socket.off('cList');
       socket.off('posts');
+      socket.off('post-num');
       socket.off('followers');
       socket.off('following');
       socket.off('num-follower');
@@ -117,12 +113,12 @@ const App = () => {
         <PostComment />
       </Route>
       <Route path='/profile'>
-        <Profile posts={postsList} />
+        <Profile username={uName} posts={postsList} postNum={postNum} />
       </Route>
       <Route exact={true} path='/'>
         <div className='container'>
           <QRDisplay username={uName} />
-          <CommentDisplay comments={commentList}/>
+          <CommentDisplay comments={commentList} />
           <FollowInfo followers={followerList} following={followingList} numFollowers={followerNum} numFollowing={followingNum} />
         </div>
       </Route>

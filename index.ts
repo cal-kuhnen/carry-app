@@ -38,6 +38,7 @@ declare global {
 const query = "https://www.instagram.com/graphql/query/?query_hash=c9100bf9110dd6361671f113dd02e7d6&variables={%22user_id%22:%2247389771069%22,%22include_chaining%22:false,%22include_reel%22:true,%22include_suggested_users%22:false,%22include_logged_out_extras%22:false,%22include_highlight_reels%22:false,%22include_related_profiles%22:false}";
 const cookiesFilePath = 'cookies.json';
 const insta = 'https://www.instagram.com/';
+const saved = '/saved/all-posts';
 
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
@@ -68,6 +69,15 @@ io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
   checkUname(socket);
+  console.log('giving qr');
+  returnComments(socket);
+  returnFollow('followers');
+  returnFollow('following');
+  returnPosts('posts');
+  socket.emit('change', currUname);
+  socket.emit('num-follower', currFollowers);
+  socket.emit('num-following', currFollowing);
+  socket.emit('num-posts', currPosts);
 
   clearInterval(pingUname);
   pingUname = setInterval(checkUname, 90000, socket);
@@ -75,35 +85,10 @@ io.on("connection", (socket:Socket) => {
   clearInterval(pingFollow);
   pingFollow = setInterval(checkProfile, 40000);
 
-  socket.on('give-qr', () => {
-    console.log('giving qr');
-    socket.emit('change', currUname);
-  });
-
-  socket.on('give-comments', () => {
-    returnComments(socket);
-  });
-
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
     postComment(socket, toPost);
   });
-
-  socket.on('give-followers', () => {
-    returnFollow('followers');
-  })
-
-  socket.on('give-following', () => {
-    returnFollow('following');
-  })
-
-  socket.on('give-follower-num', () => {
-    socket.emit('num-follower', currFollowers);
-  })
-
-  socket.on('give-following-num', () => {
-    socket.emit('num-following', currFollowing);
-  })
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
@@ -277,7 +262,7 @@ const returnComments = async (socket: Socket) => {
 
 // Check follower and following count, and update lists accordingly
 const checkProfile = (socket: Socket) => {
-  console.log('getting followers/following');
+  console.log('getting profile info');
   puppeteer
     .use(StealthPlugin())
     // @ts-ignore
@@ -313,6 +298,7 @@ const checkProfile = (socket: Socket) => {
           postsList.reverse();
           updatePosts(postsList, 'posts');
           currPosts = postsCount;
+          io.sockets.emit('num-posts', currPosts);
         }
 
         // Extract follow numbers
@@ -381,6 +367,9 @@ const checkProfile = (socket: Socket) => {
         else if (followingCount < currFollowing) {
           currFollowers = followingCount;
         }
+
+        // go get saved posts
+        await page.goto(insta + currUname + )
       } catch (err) {
         console.error(err);
       } finally {
@@ -434,6 +423,7 @@ const updatePosts = async (pList: Array<Post>, coll: string) => {
   try {
     await client.connect();
     let collection = client.db(database).collection(coll);
+    await collection.createIndex({ img: 1 }, { unique: true });
     const result = await collection.insertMany(pList);
 
     returnPosts(coll);
