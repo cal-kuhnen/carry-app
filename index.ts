@@ -43,7 +43,7 @@ const saved = '/saved/all-posts';
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
 const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-const database = 'insta_test';
+const database = 'carry_instagram';
 
 const PORT = process.env.PORT || 3002;
 const app = express();
