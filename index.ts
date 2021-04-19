@@ -295,28 +295,25 @@ const checkProfile = (socket: Socket) => {
         }
         // Get any new posts
         await page.goto(insta + currUname);
-        await page.waitForSelector('ul > li.Y8-fY');
-        let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt(x.innerHTML)));
+        await page.waitForTimeout(5000);
+        let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt((x.innerHTML).replace(/,/g, ''))));
         let postsCount = stats[0]; //first span is number of posts
-        // if (postsCount > currPosts) {
-        //   checkPostsMilestone(postsCount);
-        //   let newPosts = postsCount - currPosts;
-        //   let postsDivs = await page.$$('KL4Bh');
-        //   let postsList: Array<Post> = [];
-        //   for (let i = 0; (i < newPosts) && (i < 24); i++) {
-        //     let image = await postsDivs[i].$eval('FFVAD', (el:any) => el.getAttribute('src'));
-        //     let post: Post = {
-        //       img: image
-        //     };
-        //     console.log(`post: ${post}`);
-        //     postsList.push(post);
-        //   }
-        //   postsList.reverse();
-        //   console.log(`posts: ${postsList}`);
-        //   updatePosts(postsList, 'posts');
-        //   currPosts = postsCount;
-        //   io.sockets.emit('posts');
-        // }
+        if (postsCount > currPosts) {
+          checkPostsMilestone(postsCount);
+          let newPosts = postsCount - currPosts;
+          let postsDivs = await page.$$('.KL4Bh');
+          let postsList: Array<Post> = [];
+          for (let i = 0; (i < newPosts) && (i < 18); i++) {
+            let image = await postsDivs[i].$eval('.FFVAD', (el:any) => el.getAttribute('src'));
+            let post: Post = {
+              img: image
+            };
+            postsList.push(post);
+          }
+          postsList.reverse();
+          updatePosts(postsList, 'posts');
+          currPosts = postsCount;
+        }
 
         // Extract follow numbers
         let followerCount = stats[1]; // the second span of class g47SY is followers
@@ -453,10 +450,10 @@ const returnPosts = async (coll: string) => {
   try {
     await client.connect();
     let collection = client.db(database).collection(coll);
-    let postsArray = await collection.find().sort({_id:-1}).limit(24).toArray();
+    let postsArray = await collection.find().sort({_id:-1}).limit(18).toArray();
     let postsList = JSON.parse(JSON.stringify(postsArray));
 
-    if (coll === 'followers') {
+    if (coll === 'posts') {
       io.sockets.emit('posts', postsArray);
     }
     else {
@@ -476,10 +473,8 @@ const checkPostsMilestone = (postNumber: number) => {
   if ((postNumber % 100) < (currPosts % 100)) {
     io.sockets.emit('100-posts');
   }
-
   if ((postNumber % 1000) < (currPosts % 1000)) {
     io.sockets.emit('1000-posts');
-    currPosts = postNumber;
   }
 }
 

@@ -64,9 +64,9 @@ const App = () => {
       let increase = num - followerNum;
       setFollowerNum(num);
       let audio = new Audio('../audio/everynewfollower.mp3');
-      for (let i = 0; i < increase; i++) {
+      for (let i = 0; (i < increase) && (i < 10); i++) {
         audio.play();
-        await new Promise(r => setTimeout(r, (Math.random() * (300 - 100) + 100)));
+        await new Promise(r => setTimeout(r, (Math.random() * (300 - 20) + 20)));
       }
     });
 
@@ -109,7 +109,7 @@ const App = () => {
       socket.off('100-posts');
       socket.off('1000-posts');
     }
-  }, [uName, commentList, followerList, followingList, followerNum, followingNum]);
+  }, [uName, commentList, postsList, followerList, followingList, followerNum, followingNum]);
 
   return (
     <Router>
