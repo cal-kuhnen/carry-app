@@ -11,6 +11,7 @@ import CommentDisplay, { Comment } from './components/CommentDisplay';
 import FollowInfo, { InstaUser } from './components/FollowInfo';
 import PostComment from './components/PostComment';
 import Profile, { Post } from './components/Profile';
+import Saved from './components/Saved';
 import './reset.css';
 import './css/container.css';
 
@@ -24,6 +25,7 @@ const App = () => {
   const [uName, setUname] = useState('');
   const [commentList, setCommentList] = useState(emptyComments);
   const [postsList, setPostsList] = useState(emptyPosts);
+  const [savedList, setSavedList] = useState(emptyPosts);
   const [postNum, setPostNum] = useState(0);
   const [followerList, setFollowerList] = useState(emptyFollow);
   const [followingList, setFollowingList] = useState(emptyFollow);
@@ -46,6 +48,9 @@ const App = () => {
     })
     socket.on('num-posts', num => {
       setPostNum(num);
+    })
+    socket.on('saved', saved => {
+      setSavedList(saved);
     })
     socket.on('followers', followers => {
       setFollowerList(followers);
@@ -114,6 +119,9 @@ const App = () => {
       </Route>
       <Route path='/profile'>
         <Profile username={uName} posts={postsList} postNum={postNum} />
+      </Route>
+      <Route path='/saved'>
+        <Saved posts={savedList} />
       </Route>
       <Route exact={true} path='/'>
         <div className='container'>

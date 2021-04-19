@@ -74,6 +74,7 @@ io.on("connection", (socket:Socket) => {
   returnFollow('followers');
   returnFollow('following');
   returnPosts('posts');
+  returnPosts('saved');
   socket.emit('change', currUname);
   socket.emit('num-follower', currFollowers);
   socket.emit('num-following', currFollowing);
@@ -370,10 +371,10 @@ const checkProfile = (socket: Socket) => {
 
         // go get saved posts
         await page.goto(insta + currUname + saved);
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(20000);
         let savedDivs = await page.$$('.KL4Bh');
         let savedList: Array<Post> = [];
-        for (let i = 0; i < 18; i++) {
+        for (let i = 0; (i < savedDivs.length) && (i < 18); i++) {
           let image = await savedDivs[i].$eval('.FFVAD', (el:any) => el.getAttribute('src'));
           let post: Post = {
             img: image
