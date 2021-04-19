@@ -76,6 +76,11 @@ const SocketContainer = () => {
       setFollowingNum(num);
     })
 
+    socket.on('100-followers', () => {
+      let audio = new Audio('../audio/every100followers.mp3');
+      audio.play();
+    })
+
     socket.on('100-posts', () => {
       let audio = new Audio('../audio/every1000posts.mp3');
       audio.play();
@@ -95,6 +100,7 @@ const SocketContainer = () => {
       socket.off('num-follower');
       socket.off('num-following');
       socket.off('follower-loss');
+      socket.off('100-followers');
       socket.off('100-posts');
       socket.off('1000-posts');
     }

@@ -293,14 +293,30 @@ const checkProfile = (socket: Socket) => {
             await page.setCookie(cookie);
           }
         }
-        // Extract follow numbers
+        // Get any new posts
         await page.goto(insta + currUname);
         await page.waitForSelector('ul > li.Y8-fY');
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt(x.innerHTML)));
         let postsCount = stats[0]; //first span is number of posts
         if (postsCount > currPosts) {
           checkPostsMilestone(postsCount);
+          let newPosts = postsCount - currPosts;
+          let postsDivs = await page.$$('KL4Bh');
+          let postsList: Array<Post> = [];
+          for (let i = 0; (i < newPosts) && (i < 24); i++) {
+            let image = await postsDivs[i].$eval('FFVAD', (el:any) => el.getAttribute('src'));
+            let post: Post = {
+              img: image
+            };
+            postsList.push(post);
+          }
+          postsList.reverse();
+          updatePosts(postsList, 'posts');
+          currPosts = postsCount;
+          io.sockets.emit('posts');
         }
+
+        // Extract follow numbers
         let followerCount = stats[1]; // the second span of class g47SY is followers
         let followingCount = stats[2]; // third span is following (first is posts)
         let links = await page.$$('.Y8-fY');
@@ -308,7 +324,7 @@ const checkProfile = (socket: Socket) => {
         // check for new followers, only need to show 12 most recent
         if (followerCount > currFollowers) {
           if ((followerCount % 100) < (currFollowers % 100)) {
-            io.sockets.emit('100-posts');
+            io.sockets.emit('100-followers');
           }
           await links[1].click(); // click on followers link (cannot be accessed as link)
           await page.waitForTimeout(500);
@@ -400,10 +416,49 @@ const returnFollow = async (coll: string) => {
     let followList = JSON.parse(JSON.stringify(followArray));
 
     if (coll === 'followers') {
-      io.sockets.emit('followers', followArray);
+      io.sockets.emit('followers', followList);
     }
     else {
-      io.sockets.emit('following', followArray);
+      io.sockets.emit('following', followList);
+    }
+    console.log(`sending ${coll} list`);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    await client.close();
+  }
+}
+
+const updatePosts = async (pList: Array<Post>, coll: string) => {
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+  try {
+    await client.connect();
+    let collection = client.db(database).collection(coll);
+    const result = await collection.insertMany(pList);
+
+    returnPosts(coll);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    await client.close();
+  }
+}
+
+const returnPosts = async (coll: string) => {
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+  try {
+    await client.connect();
+    let collection = client.db(database).collection(coll);
+    let postsArray = await collection.find().sort({_id:-1}).limit(24).toArray();
+    let postsList = JSON.parse(JSON.stringify(postsArray));
+
+    if (coll === 'followers') {
+      io.sockets.emit('posts', postsList);
+    }
+    else {
+      io.sockets.emit('likes', postsList);
     }
     console.log(`sending ${coll} list`);
 
