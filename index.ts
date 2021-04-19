@@ -71,8 +71,6 @@ let baseSaved: Array<Post> = [{img:''}];
 io.on("connection", (socket:Socket) => {
   console.log(`Socket connected with id: ${socket.id}`);
 
-  checkUname(socket);
-  checkProfile();
   console.log('giving qr');
   returnComments(socket);
   returnFollow('followers');
@@ -84,11 +82,13 @@ io.on("connection", (socket:Socket) => {
   socket.emit('posts', basePosts);
   socket.emit('saved', baseSaved);
 
-  clearInterval(pingUname);
-  pingUname = setInterval(checkUname, 90000, socket);
+  if (socket.client.conn.server.clientsCount === 1) {
+    clearInterval(pingUname);
+    pingUname = setInterval(checkUname, 90000, socket);
 
-  clearInterval(pingFollow);
-  pingFollow = setInterval(checkProfile, 40000);
+    clearInterval(pingFollow);
+    pingFollow = setInterval(checkProfile, 40000);
+  }
 
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
