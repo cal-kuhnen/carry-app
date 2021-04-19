@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-import { config, mongoInfo } from './config';
+//import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
@@ -42,19 +42,20 @@ const saved = '/saved/all-posts';
 
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
-const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS || mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const database = 'insta_test';
 
 const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(express.static(path.join(__dirname, 'client/build')));
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
-});
+const io = new Server(server);
+// {
+//   cors: {
+//     origin: "http://localhost:3000",
+//     methods: ["GET", "POST"]
+//   }
+// }
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -114,8 +115,8 @@ const instaLogin = () => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', process.env.INSTA_USERNAME || config.username);
-        await page.type('input[name="password"]', process.env.INSTA_PASSWORD || config.password);
+        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
+        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
         await page.waitForNavigation();
         // get login cookies from session
@@ -281,7 +282,7 @@ const checkProfile = (socket: Socket) => {
         }
         // Get any new posts
         await page.goto(insta + currUname);
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(4000);
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt((x.innerHTML).replace(/,/g, ''))));
         let postsCount = stats[0]; //first span is number of posts
         if (postsCount > currPosts) {
@@ -334,6 +335,7 @@ const checkProfile = (socket: Socket) => {
           currFollowers = followerCount;
           io.sockets.emit('num-follower', currFollowers);
           await page.click('div.QBdPU'); // close follower info
+          await page.waitForTimeout(500);
         }
         else if (followerCount < currFollowers) {
           currFollowers = followerCount;
@@ -371,7 +373,7 @@ const checkProfile = (socket: Socket) => {
 
         // go get saved posts
         await page.goto(insta + currUname + saved);
-        await page.waitForTimeout(20000);
+        await page.waitForTimeout(4000);
         let savedDivs = await page.$$('.KL4Bh');
         let savedList: Array<Post> = [];
         for (let i = 0; (i < savedDivs.length) && (i < 18); i++) {
@@ -482,9 +484,9 @@ const checkPostsMilestone = (postNumber: number) => {
   }
 }
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname+'/client/build/index.html'));
-// });
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+});
 
 server.listen(PORT, () => {
   console.log(`[server]: Server is running at https://localhost:${PORT}`);
