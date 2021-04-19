@@ -95,6 +95,10 @@ io.on("connection", (socket:Socket) => {
     postComment(socket, toPost);
   });
 
+  socket.on('error', err => {
+    console.error(err);
+  })
+
   socket.on("disconnect", () => {
     console.log("user disconnected");
     console.log(`clients: ${socket.client.conn.server.clientsCount}`);
