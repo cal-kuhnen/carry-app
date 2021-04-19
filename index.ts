@@ -65,8 +65,8 @@ let pingFollow: any;
 let currPosts = 0;
 let currFollowers = 0;
 let currFollowing = 0;
-let baseFollowers = Array<InstaUser> = [{img:'', username:''}];
-let baseFollowing = Array<InstaUser> = [{img:'', username:''}];
+let baseFollowers: Array<InstaUser> = [{img:'', username:''}];
+let baseFollowing: Array<InstaUser> = [{img:'', username:''}];
 let basePosts: Array<Post> = [{img:''}];
 let baseSaved: Array<Post> = [{img:''}];
 
