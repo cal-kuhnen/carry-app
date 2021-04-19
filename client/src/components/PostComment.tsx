@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { socket } from './SocketContainer';
+import { socket } from '../App';
 
 interface Comment {
   link: string;

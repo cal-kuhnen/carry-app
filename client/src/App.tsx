@@ -10,6 +10,7 @@ import QRDisplay from './components/QRDisplay';
 import CommentDisplay, { Comment } from './components/CommentDisplay';
 import FollowInfo, { InstaUser } from './components/FollowInfo';
 import PostComment from './components/PostComment';
+import Profile, { Post } from './components/Profile';
 import './reset.css';
 import './css/container.css';
 
@@ -17,14 +18,16 @@ const ENDPOINT = 'http://localhost:3002';
 export const socket = socketIOClient(ENDPOINT);
 const emptyComments: Array<Comment> = [{_id:'', link:'', comment:'', time:''}];
 const emptyFollow: Array<InstaUser> = [{_id:'', username:'', img:''}];
+const emptyPosts: Array<Post> = [{_id:'', img:''}];
 
 const App = () => {
   const [uName, setUname] = useState('');
   const [commentList, setCommentList] = useState(emptyComments);
+  const [postsList, setPostsList] = useState(emptyPosts);
   const [followerList, setFollowerList] = useState(emptyFollow);
   const [followingList, setFollowingList] = useState(emptyFollow);
-  const [followerNum, setFollowerNum] = useState(-1);
-  const [followingNum, setFollowingNum] = useState(-1);
+  const [followerNum, setFollowerNum] = useState(0);
+  const [followingNum, setFollowingNum] = useState(0);
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -46,6 +49,9 @@ const App = () => {
       let audio = new Audio('../audio/comment.mp3');
       audio.play();
     });
+    socket.on('posts', posts => {
+      setPostsList(posts);
+    })
     socket.on('followers', followers => {
       setFollowerList(followers);
     });
@@ -93,6 +99,7 @@ const App = () => {
       console.log('cleanup');
       socket.off('change');
       socket.off('cList');
+      socket.off('posts');
       socket.off('followers');
       socket.off('following');
       socket.off('num-follower');
@@ -108,6 +115,9 @@ const App = () => {
     <Router>
       <Route path='/post'>
         <PostComment />
+      </Route>
+      <Route path='/profile'>
+        <Profile posts={postsList} />
       </Route>
       <Route exact={true} path='/'>
         <div className='container'>

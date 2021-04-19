@@ -42,7 +42,7 @@ const insta = 'https://www.instagram.com/';
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
 const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS || mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-const database = 'carry_instagram';
+const database = 'insta_test';
 
 const PORT = process.env.PORT || 3002;
 const app = express();
@@ -298,23 +298,25 @@ const checkProfile = (socket: Socket) => {
         await page.waitForSelector('ul > li.Y8-fY');
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt(x.innerHTML)));
         let postsCount = stats[0]; //first span is number of posts
-        if (postsCount > currPosts) {
-          checkPostsMilestone(postsCount);
-          let newPosts = postsCount - currPosts;
-          let postsDivs = await page.$$('KL4Bh');
-          let postsList: Array<Post> = [];
-          for (let i = 0; (i < newPosts) && (i < 24); i++) {
-            let image = await postsDivs[i].$eval('FFVAD', (el:any) => el.getAttribute('src'));
-            let post: Post = {
-              img: image
-            };
-            postsList.push(post);
-          }
-          postsList.reverse();
-          updatePosts(postsList, 'posts');
-          currPosts = postsCount;
-          io.sockets.emit('posts');
-        }
+        // if (postsCount > currPosts) {
+        //   checkPostsMilestone(postsCount);
+        //   let newPosts = postsCount - currPosts;
+        //   let postsDivs = await page.$$('KL4Bh');
+        //   let postsList: Array<Post> = [];
+        //   for (let i = 0; (i < newPosts) && (i < 24); i++) {
+        //     let image = await postsDivs[i].$eval('FFVAD', (el:any) => el.getAttribute('src'));
+        //     let post: Post = {
+        //       img: image
+        //     };
+        //     console.log(`post: ${post}`);
+        //     postsList.push(post);
+        //   }
+        //   postsList.reverse();
+        //   console.log(`posts: ${postsList}`);
+        //   updatePosts(postsList, 'posts');
+        //   currPosts = postsCount;
+        //   io.sockets.emit('posts');
+        // }
 
         // Extract follow numbers
         let followerCount = stats[1]; // the second span of class g47SY is followers
@@ -455,7 +457,7 @@ const returnPosts = async (coll: string) => {
     let postsList = JSON.parse(JSON.stringify(postsArray));
 
     if (coll === 'followers') {
-      io.sockets.emit('posts', postsList);
+      io.sockets.emit('posts', postsArray);
     }
     else {
       io.sockets.emit('likes', postsList);
@@ -473,17 +475,10 @@ const returnPosts = async (coll: string) => {
 const checkPostsMilestone = (postNumber: number) => {
   if ((postNumber % 100) < (currPosts % 100)) {
     io.sockets.emit('100-posts');
-    currPosts = postNumber;
-  }
-  else {
-    currPosts = postNumber;
   }
 
   if ((postNumber % 1000) < (currPosts % 1000)) {
     io.sockets.emit('1000-posts');
-    currPosts = postNumber;
-  }
-  else {
     currPosts = postNumber;
   }
 }
