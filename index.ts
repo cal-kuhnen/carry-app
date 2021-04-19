@@ -369,7 +369,20 @@ const checkProfile = (socket: Socket) => {
         }
 
         // go get saved posts
-        await page.goto(insta + currUname + )
+        await page.goto(insta + currUname + saved);
+        await page.waitForTimeout(5000);
+        let savedDivs = await page.$$('.KL4Bh');
+        let savedList: Array<Post> = [];
+        for (let i = 0; i < 18; i++) {
+          let image = await savedDivs[i].$eval('.FFVAD', (el:any) => el.getAttribute('src'));
+          let post: Post = {
+            img: image
+          };
+          savedList.push(post);
+        }
+        savedList.reverse();
+        updatePosts(savedList, 'saved');
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -447,7 +460,7 @@ const returnPosts = async (coll: string) => {
       io.sockets.emit('posts', postsArray);
     }
     else {
-      io.sockets.emit('likes', postsList);
+      io.sockets.emit('saved', postsArray);
     }
     console.log(`sending ${coll} list`);
 
