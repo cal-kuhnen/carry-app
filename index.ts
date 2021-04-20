@@ -56,7 +56,7 @@ const io = new Server(server);
 //     origin: "http://localhost:3000",
 //     methods: ["GET", "POST"]
 //   }
-// }
+// });
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -120,6 +120,10 @@ const instaLogin = () => {
         await page.type('input[name="username"]', process.env.INSTA_USERNAME);
         await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
+        await page.waitForTimeout(500);
+        if ((await page.$('.sqdOP')) !== null) {
+          await page.click('button[type="button"]');
+        }
         await page.waitForNavigation();
         // get login cookies from session
         const cookiesObject = await page.cookies();
