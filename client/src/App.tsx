@@ -15,8 +15,8 @@ import Saved from './components/Saved';
 import './reset.css';
 import './css/container.css';
 
-//const ENDPOINT = 'http://localhost:3002';
-export const socket = socketIOClient();
+const ENDPOINT = 'http://localhost:3002';
+export const socket = socketIOClient(ENDPOINT);
 const emptyComments: Array<Comment> = [{_id:'', link:'', comment:'', time:''}];
 const emptyFollow: Array<InstaUser> = [{_id:'', username:'', img:''}];
 const emptyPosts: Array<Post> = [{_id:'', img:''}];

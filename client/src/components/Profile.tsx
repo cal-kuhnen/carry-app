@@ -17,7 +17,7 @@ const Profile = (props: ProfileProps) => {
   let displayPosts = props.posts.map((post) => {
     return (
       <div className='post' key={post._id}>
-        <img className='post-content' src={post.img} alt='post from account'></img>
+        <img className='post-content' src={`data:image/png;base64,${post.img}`} alt='post from account'></img>
       </div>
     )
   });
