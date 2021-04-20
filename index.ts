@@ -295,7 +295,7 @@ const checkProfile = (socket: Socket) => {
           }
         }
         // Get any new posts
-        await page.goto('http://www.instagram.com/gremlin_extra');
+        await page.goto(insta + currUname);
         await page.waitForTimeout(5000);
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt((x.innerHTML).replace(/,/g, ''))));
         let postsCount = stats[0]; //first span is number of posts
@@ -320,7 +320,7 @@ const checkProfile = (socket: Socket) => {
         }
 
         // Extract follow numbers
-        await page.goto('https://www.instagram.com/gremlin_extra/');
+        await page.goto(insta + currUname);
         let followerCount = stats[1]; // the second span of class g47SY is followers
         let followingCount = stats[2]; // third span is following (first is posts)
         let links = await page.$$('.Y8-fY');
@@ -397,20 +397,28 @@ const checkProfile = (socket: Socket) => {
           currFollowers = followingCount;
         }
 
-        // go get saved posts
-        // await page.goto(insta + currUname + saved);
-        // await page.waitForTimeout(5000);
-        // let savedDivs = await page.$$('.KL4Bh');
-        // let savedList: Array<Post> = [];
-        // for (let i = 0; (i < savedDivs.length) && (i < 18); i++) {
-        //   let image = await savedDivs[i].$eval('.FFVAD', (el:any) => el.getAttribute('src'));
-        //   let post: Post = {
-        //     img: image
-        //   };
-        //   savedList.push(post);
-        // }
-        // baseSaved = savedList;
-        // io.sockets.emit('saved', savedList);
+        //go get saved posts
+        await page.goto(insta + currUname + saved);
+        await page.waitForTimeout(5000);
+        let savedLinks = await page.$$eval('.FFVAD', (el:any) => el.map((x: any) => x.getAttribute('src')));
+        let savedList: Array<Post> = [];
+        for (let i = 0; (i < savedLinks.length) && (i < 18); i++) {
+          let imageSource = await page.goto(savedLinks[i]);
+          //let buffer = await imageSource.buffer();
+          let imagePath = path.join(__dirname, `/client/public/pics/image${i}.jpg`);
+          fs.writeFile(imagePath, await imageSource.buffer(), function (err) {
+            if (err) {
+                return console.log(err);
+            }
+            console.log("file saved");
+          });
+          let post: Post = {
+            img: savedLinks[i]
+          };
+          savedList.push(post);
+        }
+        baseSaved = savedList;
+        io.sockets.emit('saved', savedList);
         await page.removeAllListeners();
         await page.close();
       } catch (err) {
@@ -433,9 +441,13 @@ const checkPostsMilestone = (postNumber: number) => {
   }
 }
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+app.get('/image0', (req, res) => {
+  res.sendFile(path.join(__dirname, '/pics/image0.jpg'));
 });
+
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname+'/client/build/index.html'));
+// });
 
 server.listen(PORT, () => {
   console.log(`[server]: Server is running at https://localhost:${PORT}`);

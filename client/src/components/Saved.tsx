@@ -26,6 +26,7 @@ const Saved = (props: SavedProps) => {
         <div className='post-grid'>
           {displayPosts}
         </div>
+        <img src='./pics/image0.jpg'></img>
       </div>
     </div>
   )
