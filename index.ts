@@ -295,16 +295,16 @@ const checkProfile = (socket: Socket) => {
           }
         }
         // Get any new posts
-        await page.goto('https://www.instagram.com/gremlin_extra/');
+        await page.goto('http://www.instagram.com/gremlin_extra');
         await page.waitForTimeout(5000);
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt((x.innerHTML).replace(/,/g, ''))));
         let postsCount = stats[0]; //first span is number of posts
         if (postsCount != currPosts) {
           checkPostsMilestone(postsCount);
-          let postsDivs = await page.$$eval('.FFVAD', (el:any) => el.map((x: any) => x.getAttribute('src')));
+          let postsLinks = await page.$$eval('.FFVAD', (el:any) => el.map((x: any) => x.getAttribute('src')));
           let postsList: Array<Post> = [];
-          for (let i = 0; (i < postsDivs.length) && (i < 18); i++) {
-            let imageSource = await page.goto(postsDivs[i]);
+          for (let i = 0; (i < postsLinks.length) && (i < 18); i++) {
+            let imageSource = await page.goto(postsLinks[i]);
             let buffer = await imageSource.buffer();
             let base64image = buffer.toString('base64');
             let post = {
@@ -336,16 +336,20 @@ const checkProfile = (socket: Socket) => {
           await page.waitForTimeout(500);
           let followerDivs = await page.$$('div.PZuss > li');
           let followerList: Array<InstaUser> = [];
-
+          let followerImages = await page.$$eval('.Jv7Aj > .RR-M- > ._2dbep > img._6q-tv', (el: any) => el.map((x: any) => x.getAttribute('src')));
           // Instagram returns the 12 most recent followers, the max the app
           // will display. Therefore just grab up to 12.
           for (let i = 0; (i < followerDivs.length) && (i < 12); i++) {
-            let image = await followerDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
             let username = await followerDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
+            let page2 = await browser.newPage();
+            let imageSource = await page2.goto(followerImages[i]);
+            let buffer = await imageSource.buffer();
+            let base64image = buffer.toString('base64');
             let follower: InstaUser = {
-              img: image,
+              img: base64image,
               username: username
             };
+            page2.close();
             followerList.push(follower);
           }
           //updateFollow(followerList, 'followers');
@@ -368,22 +372,26 @@ const checkProfile = (socket: Socket) => {
           await page.waitForTimeout(500);
           let followingDivs = await page.$$('div.PZuss > li');
           let followingList: Array<InstaUser> = [];
-
+          let followingImages = await page.$$eval('.Jv7Aj > .RR-M- > ._2dbep > img._6q-tv', (el: any) => el.map((x: any) => x.getAttribute('src')));
           // creates array of InstaUser objects and sends them to database
           for (let i = 0; (i < followingDivs.length) && (i < 12); i++) {
-            let image = await followingDivs[i].$eval('img._6q-tv', (el: any) => el.getAttribute('src'));
             let username = await followingDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
+            let page2 = await browser.newPage();
+            let imageSource = await page2.goto(followingImages[i]);
+            let buffer = await imageSource.buffer();
+            let base64image = buffer.toString('base64');
             let following: InstaUser = {
-              img: image,
+              img: base64image,
               username: username
             };
             followingList.push(following);
+            page2.close();
           }
           //updateFollow(followingList, 'following');
           currFollowing = followingCount;
           baseFollowing = followingList;
-          io.sockets.emit('following', baseFollowing);
-          io.sockets.emit('num-following', currFollowing);
+          socket.emit('following', baseFollowing);
+          socket.emit('num-following', currFollowing);
         }
         else if (followingCount < currFollowing) {
           currFollowers = followingCount;
