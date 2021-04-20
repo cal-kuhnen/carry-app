@@ -120,12 +120,13 @@ const instaLogin = () => {
         await page.type('input[name="username"]', process.env.INSTA_USERNAME);
         await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(1000);
         if ((await page.$('.sqdOP')) !== null) {
           console.log('need to click browser info button');
           await page.click('button[type="button"]');
+          await page.waitForTimeout(1000);
+          await page.click('button.HoLwm');
         }
-        await page.waitForNavigation();
         // get login cookies from session
         const cookiesObject = await page.cookies();
         fs.writeFile(cookiesFilePath, JSON.stringify(cookiesObject),
