@@ -2,9 +2,10 @@ import React from 'react';
 import '../css/profile.css';
 
 export interface Post {
-  _id: string;
+  key: string;
   img: string;
 }
+
 
 interface ProfileProps {
   username: string;
@@ -16,7 +17,7 @@ const Profile = (props: ProfileProps) => {
 
   let displayPosts = props.posts.map((post) => {
     return (
-      <div className='post' key={post._id}>
+      <div className='post' key={post.key}>
         <img className='post-content' src={`data:image/png;base64,${post.img}`} alt='post from account'></img>
       </div>
     )

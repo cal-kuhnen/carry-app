@@ -10,7 +10,7 @@ const Saved = (props: SavedProps) => {
 
   let displayPosts = props.posts.map((post) => {
     return (
-      <div className='post' key={post._id}>
+      <div className='post' key={post.key}>
         <img className='saved' src={post.img} alt='post liked by account'></img>
       </div>
     )
@@ -26,7 +26,6 @@ const Saved = (props: SavedProps) => {
         <div className='post-grid'>
           {displayPosts}
         </div>
-        <img src='./pics/image0.jpg'></img>
       </div>
     </div>
   )

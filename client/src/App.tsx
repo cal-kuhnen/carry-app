@@ -19,7 +19,7 @@ const ENDPOINT = 'http://localhost:3002';
 export const socket = socketIOClient(ENDPOINT);
 const emptyComments: Array<Comment> = [{_id:'', link:'', comment:'', time:''}];
 const emptyFollow: Array<InstaUser> = [{_id:'', username:'', img:''}];
-const emptyPosts: Array<Post> = [{_id:'', img:''}];
+const emptyPosts: Array<Post> = [{key:'', img:''}];
 
 const App = () => {
   const [uName, setUname] = useState('');
@@ -33,6 +33,7 @@ const App = () => {
   const [followingNum, setFollowingNum] = useState(0);
 
   useEffect(() => {
+    socket.emit('initialize');
     socket.on('change', data => {
       setUname(data);
       let audio = new Audio('../audio/UsernameChange.mp3');

@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-import { config, mongoInfo } from './config';
+//import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
@@ -22,6 +22,7 @@ interface InstaUser {
 }
 
 interface Post {
+  key?: number;
   img: string;
 }
 
@@ -35,26 +36,27 @@ declare global {
   }
 }
 
-const query = `https://www.instagram.com/graphql/query/?query_hash=c9100bf9110dd6361671f113dd02e7d6&variables={%22user_id%22:%22${process.env.USER_ID || config.query}%22,%22include_chaining%22:false,%22include_reel%22:true,%22include_suggested_users%22:false,%22include_logged_out_extras%22:false,%22include_highlight_reels%22:false,%22include_related_profiles%22:false}`;
+const query = `https://www.instagram.com/graphql/query/?query_hash=c9100bf9110dd6361671f113dd02e7d6&variables={%22user_id%22:%22${process.env.USER_ID}%22,%22include_chaining%22:false,%22include_reel%22:true,%22include_suggested_users%22:false,%22include_logged_out_extras%22:false,%22include_highlight_reels%22:false,%22include_related_profiles%22:false}`;
 const cookiesFilePath = 'cookies.json';
 const insta = 'https://www.instagram.com/';
 const saved = '/saved/all-posts';
 
 // Setup mongoDB connection
 const MongoClient = mongodb.MongoClient;
-const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS || mongoInfo.password}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://dbAdminCal:${process.env.MONGO_PASS}@cluster0.1seup.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const database = 'carry_instagram';
 
 const PORT = process.env.PORT || 3002;
 const app = express();
 app.use(express.static(path.join(__dirname, 'client/build')));
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
-});
+const io = new Server(server);
+// {
+//   cors: {
+//     origin: "http://localhost:3000",
+//     methods: ["GET", "POST"]
+//   }
+// }
 
 let response: string|null = 'none';
 let instaInfo: any = {};
@@ -85,15 +87,6 @@ io.on("connection", (socket:Socket) => {
   socket.emit('posts', basePosts);
   socket.emit('saved', baseSaved);
 
-  if (socket.client.conn.server.clientsCount === 1) {
-    checkUname(socket);
-    clearInterval(pingUname);
-    pingUname = setInterval(checkUname, 120000, socket);
-
-    clearInterval(pingFollow);
-    pingFollow = setInterval(checkProfile, 60000, socket);
-  }
-
   socket.on('post-comment', (toPost: Comment) => {
     console.log(`must post comment ${toPost.comment}`);
     postComment(socket, toPost);
@@ -101,15 +94,13 @@ io.on("connection", (socket:Socket) => {
 
   socket.on('error', err => {
     console.error(err);
+    clearInterval(pingUname);
+    clearInterval(pingFollow);
   })
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
     console.log(`clients: ${socket.client.conn.server.clientsCount}`);
-    if (socket.client.conn.server.clientsCount === 0) {
-      clearInterval(pingUname);
-      clearInterval(pingFollow);
-    }
   });
 });
 
@@ -126,8 +117,8 @@ const instaLogin = () => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', process.env.INSTA_USERNAME || config.username);
-        await page.type('input[name="password"]', process.env.INSTA_PASSWORD || config.password);
+        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
+        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
         await page.waitForNavigation();
         // get login cookies from session
@@ -146,11 +137,11 @@ const instaLogin = () => {
         }
       });
 }
-//instaLogin(); // login on server startup
+instaLogin(); // login on server startup
 
 // Use puppeteer to access instagram graphql query because using axios results
 // in bot detection and a redirect from instagram.
-const checkUname = async (socket:Socket) => {
+const checkUname = async () => {
   console.log('check uname in progress');
   puppeteer
     .use(StealthPlugin())
@@ -277,7 +268,7 @@ const returnComments = async (socket: Socket) => {
 }
 
 // Check follower and following count, and update lists accordingly
-const checkProfile = (socket: Socket) => {
+const checkProfile = () => {
   console.log('getting profile info');
   puppeteer
     .use(StealthPlugin())
@@ -314,9 +305,9 @@ const checkProfile = (socket: Socket) => {
           }
           //postsList.reverse();
           basePosts = postsList;
-          socket.emit('posts', postsList);
+          io.sockets.emit('posts', postsList);
           currPosts = postsCount;
-          socket.emit('num-posts', currPosts);
+          io.sockets.emit('num-posts', currPosts);
         }
 
         // Extract follow numbers
@@ -337,8 +328,7 @@ const checkProfile = (socket: Socket) => {
           let followerDivs = await page.$$('div.PZuss > li');
           let followerList: Array<InstaUser> = [];
           let followerImages = await page.$$eval('.Jv7Aj > .RR-M- > ._2dbep > img._6q-tv', (el: any) => el.map((x: any) => x.getAttribute('src')));
-          // Instagram returns the 12 most recent followers, the max the app
-          // will display. Therefore just grab up to 12.
+
           for (let i = 0; (i < followerDivs.length) && (i < 12); i++) {
             let username = await followerDivs[i].$eval('a.FPmhX', (el: any) => el.innerHTML);
             let page2 = await browser.newPage();
@@ -352,7 +342,6 @@ const checkProfile = (socket: Socket) => {
             page2.close();
             followerList.push(follower);
           }
-          //updateFollow(followerList, 'followers');
           currFollowers = followerCount;
           baseFollowers = followerList;
           io.sockets.emit('followers', baseFollowers);
@@ -387,11 +376,10 @@ const checkProfile = (socket: Socket) => {
             followingList.push(following);
             page2.close();
           }
-          //updateFollow(followingList, 'following');
           currFollowing = followingCount;
           baseFollowing = followingList;
-          socket.emit('following', baseFollowing);
-          socket.emit('num-following', currFollowing);
+          io.sockets.emit('following', baseFollowing);
+          io.sockets.emit('num-following', currFollowing);
         }
         else if (followingCount < currFollowing) {
           currFollowers = followingCount;
@@ -404,8 +392,7 @@ const checkProfile = (socket: Socket) => {
         let savedList: Array<Post> = [];
         for (let i = 0; (i < savedLinks.length) && (i < 18); i++) {
           let imageSource = await page.goto(savedLinks[i]);
-          //let buffer = await imageSource.buffer();
-          let imagePath = path.join(__dirname, `/client/public/pics/image${i}.jpg`);
+          let imagePath = path.join(__dirname, `/client/build/pics/saved/saved${i}.jpg`);
           fs.writeFile(imagePath, await imageSource.buffer(), function (err) {
             if (err) {
                 return console.log(err);
@@ -413,7 +400,8 @@ const checkProfile = (socket: Socket) => {
             console.log("file saved");
           });
           let post: Post = {
-            img: savedLinks[i]
+            key: Math.floor(Date.now() / 1000) + i,
+            img: `./pics/saved/saved${i}.jpg`
           };
           savedList.push(post);
         }
@@ -441,13 +429,13 @@ const checkPostsMilestone = (postNumber: number) => {
   }
 }
 
-app.get('/image0', (req, res) => {
-  res.sendFile(path.join(__dirname, '/pics/image0.jpg'));
-});
+checkUname();
+pingUname = setInterval(checkUname, 120000);
+pingFollow = setInterval(checkProfile, 60000);
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname+'/client/build/index.html'));
-// });
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+});
 
 server.listen(PORT, () => {
   console.log(`[server]: Server is running at https://localhost:${PORT}`);
