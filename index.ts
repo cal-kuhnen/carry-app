@@ -122,6 +122,7 @@ const instaLogin = () => {
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         if ((await page.$('.sqdOP')) !== null) {
+          console.log('need to click browser info button');
           await page.click('button[type="button"]');
         }
         await page.waitForNavigation();
