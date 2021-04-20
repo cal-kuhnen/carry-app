@@ -12,8 +12,8 @@
 
 # production
 /build
-/client/public/audio
-/client/public/pics
+audio/
+saved/
 
 # misc
 .DS_Store
