@@ -124,7 +124,7 @@ const instaLogin = () => {
         if ((await page.$('.sqdOP')) !== null) {
           console.log('need to click browser info button');
           await page.click('button[type="button"]');
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(5000);
           await page.click('button.HoLwm');
         }
         // get login cookies from session
