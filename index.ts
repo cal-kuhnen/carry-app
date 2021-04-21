@@ -300,7 +300,9 @@ const checkProfile = () => {
         // Get any new posts
         await page.goto(insta + currUname);
         await page.waitForTimeout(5000);
+        // @ts-ignore
         let screenshot = await page.screenshot({ encoding: base64 });
+        // @ts-ignore
         let screenshotArray: Array<Post> = [{
           img: screenshot
         }];
