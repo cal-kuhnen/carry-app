@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-//import { config, mongoInfo } from './config';
+import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
@@ -118,36 +118,36 @@ const instaLogin = () => {
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForTimeout(10000);
         // @ts-ignore
-        let screenshot = await page.screenshot({ encoding: 'base64' });
-        let screenshotArray: Array<Post> = [{
-          // @ts-ignore
-          img: screenshot
-        }];
-        io.sockets.emit('posts', screenshotArray);
-        // await page.waitForSelector('input[name="username"]');
-        // await page.type('input[name="username"]', process.env.INSTA_USERNAME);
-        // await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
-        // await page.click('button[type="submit"]');
-        // await page.waitForTimeout(5000);
-        // if ((await page.$('.f5C5x')) !== null) {
-        //   console.log('need to click browser info button');
-        //   await page.click('button[type="button"]');
-        //   await page.waitForTimeout(5000);
-        //   if ((await page.$('.f5C5x')) !== null) {
-        //     let buttons = await page.$$('button[type="button"]');
-        //     await buttons[1].click();
-        //   }
-        //   await page.waitForNavigation();
-        // }
-        // // get login cookies from session
-        // const cookiesObject = await page.cookies();
-        // fs.writeFile(cookiesFilePath, JSON.stringify(cookiesObject),
-        //   function(err) {
-        //     if (err) {
-        //     console.log('The file could not be written.', err)
-        //     }
-        //     console.log('Session has been successfully saved')
-        //   });
+        // let screenshot = await page.screenshot({ encoding: 'base64' });
+        // let screenshotArray: Array<Post> = [{
+        //   // @ts-ignore
+        //   img: screenshot
+        // }];
+        // io.sockets.emit('posts', screenshotArray);
+        await page.waitForSelector('input[name="username"]');
+        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
+        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
+        await page.click('button[type="submit"]');
+        await page.waitForTimeout(5000);
+        if ((await page.$('.f5C5x')) !== null) {
+          console.log('need to click browser info button');
+          await page.click('button[type="button"]');
+          await page.waitForTimeout(5000);
+          if ((await page.$('.f5C5x')) !== null) {
+            let buttons = await page.$$('button[type="button"]');
+            await buttons[1].click();
+          }
+          await page.waitForNavigation();
+        }
+        // get login cookies from session
+        const cookiesObject = await page.cookies();
+        fs.writeFile(cookiesFilePath, JSON.stringify(cookiesObject),
+          function(err) {
+            if (err) {
+            console.log('The file could not be written.', err)
+            }
+            console.log('Session has been successfully saved')
+          });
       } catch (err) {
         console.error(err);
       } finally {
@@ -333,12 +333,6 @@ const checkProfile = () => {
 
         // Extract follow numbers
         await page.goto(insta + currUname);
-        let screenshot = await page.screenshot({ encoding: 'base64' });
-        let screenshotArray: Array<Post> = [{
-          // @ts-ignore
-          img: screenshot
-        }];
-        io.sockets.emit('posts', screenshotArray);
         let followerCount = stats[1]; // the second span of class g47SY is followers
         let followingCount = stats[2]; // third span is following (first is posts)
         let links = await page.$$('.Y8-fY');
