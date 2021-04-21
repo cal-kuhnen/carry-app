@@ -123,7 +123,7 @@ const instaLogin = () => {
           // @ts-ignore
           img: screenshot
         }];
-        io.sockets.emit('posts', screenshotArray)
+        io.sockets.emit('posts', screenshotArray);
         // await page.waitForSelector('input[name="username"]');
         // await page.type('input[name="username"]', process.env.INSTA_USERNAME);
         // await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
@@ -333,6 +333,12 @@ const checkProfile = () => {
 
         // Extract follow numbers
         await page.goto(insta + currUname);
+        let screenshot = await page.screenshot({ encoding: 'base64' });
+        let screenshotArray: Array<Post> = [{
+          // @ts-ignore
+          img: screenshot
+        }];
+        io.sockets.emit('posts', screenshotArray);
         let followerCount = stats[1]; // the second span of class g47SY is followers
         let followingCount = stats[2]; // third span is following (first is posts)
         let links = await page.$$('.Y8-fY');
