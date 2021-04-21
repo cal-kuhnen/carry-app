@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Server, Socket } from 'socket.io';
 import * as mongodb from 'mongodb';
-import { config, mongoInfo } from './config';
+//import { config, mongoInfo } from './config';
 import route from './routes/route';
 
 interface Comment {
