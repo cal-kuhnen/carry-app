@@ -137,12 +137,12 @@ const instaLogin = () => {
             }
             console.log('Session has been successfully saved')
           });
-        } catch (err) {
-          console.error(err);
-        } finally {
-          await browser.close();
-        }
-      });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        await browser.close();
+      }
+    });
 }
 instaLogin(); // login on server startup
 
@@ -282,7 +282,7 @@ const checkProfile = () => {
     // @ts-ignore
     .launch({ args: ['--no-sandbox']})
     .then(async browser => {
-      // try {
+      try {
       //   // load cookies for login info
       //   const page = await browser.newPage();
       //   const cookiesString = fs.readFileSync(cookiesFilePath);
