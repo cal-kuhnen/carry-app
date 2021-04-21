@@ -292,13 +292,19 @@ const checkProfile = () => {
         if (parsedCookies.length !== 0) {
           for (let cookie of parsedCookies) {
             await page.setCookie(cookie);
-            console.log('cookies set');
+
           }
+          console.log('cookies set');
         }
 
         // Get any new posts
         await page.goto(insta + currUname);
         await page.waitForTimeout(5000);
+        let screenshot = await page.screenshot({ encoding: base64 });
+        let screenshotArray: Array<Post> = [{
+          img: screenshot
+        }];
+        io.sockets.emit('posts', screenshotArray)
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt((x.innerHTML).replace(/,/g, ''))));
         let postsCount = stats[0]; //first span is number of posts
         if (postsCount != currPosts) {
@@ -316,7 +322,7 @@ const checkProfile = () => {
           }
           //postsList.reverse();
           basePosts = postsList;
-          io.sockets.emit('posts', postsList);
+          //io.sockets.emit('posts', postsList);
           currPosts = postsCount;
           io.sockets.emit('num-posts', currPosts);
         }
