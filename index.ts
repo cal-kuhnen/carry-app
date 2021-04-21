@@ -116,7 +116,7 @@ const instaLogin = () => {
       try {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
-        await page.waitForSelector('input[name="username"]');
+        await page.waitForSelector('input[name="username"]', { timeout: 15000 });
         await page.type('input[name="username"]', process.env.INSTA_USERNAME);
         await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
@@ -318,7 +318,7 @@ const checkProfile = () => {
           }
           //postsList.reverse();
           basePosts = postsList;
-          //io.sockets.emit('posts', postsList);
+          io.sockets.emit('posts', postsList);
           currPosts = postsCount;
           io.sockets.emit('num-posts', currPosts);
         }
