@@ -61,6 +61,7 @@ const io = new Server(server);
 let response: string|null = 'none';
 let instaInfo: any = {};
 let currUname = '';
+let staticUname = process.env.INSTA_PROFILE;
 let pingUname: any;
 let pingFollow: any;
 let currPosts = 0;
@@ -155,7 +156,7 @@ const instaLogin = () => {
       }
     });
 }
-//instaLogin(); // login on server startup
+instaLogin(); // login on server startup
 
 // Use puppeteer to access instagram graphql query because using axios results
 // in bot detection and a redirect from instagram.
@@ -167,7 +168,7 @@ const checkUname = async () => {
     .launch({ args: ['--no-sandbox']})
     .then(async browser => {
       try {
-        // load cookies for login info
+        load cookies for login info
         const page = await browser.newPage();
         const cookiesString = fs.readFileSync(cookiesFilePath);
         const parsedCookies = JSON.parse(cookiesString.toString());
@@ -200,6 +201,7 @@ const checkUname = async () => {
         await page.close();
       } catch (err) {
         console.error(err);
+        currUname = staticUname;
       } finally {
         await browser.close();
       }
