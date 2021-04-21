@@ -127,7 +127,7 @@ const instaLogin = () => {
           await page.waitForTimeout(5000);
           if ((await page.$('.f5C5x')) !== null) {
             let buttons = await page.$$('button[type="button"]');
-            await page.click(buttons[1]);
+            await buttons[1].click();
           }
         }
         // get login cookies from session
