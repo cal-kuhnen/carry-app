@@ -137,7 +137,7 @@ const instaLogin = () => {
             let buttons = await page.$$('button[type="button"]');
             await buttons[1].click();
           }
-          await page.waitForNavigation();
+          await page.goto('https://www.instagram.com');
         }
         // get login cookies from session
         const cookiesObject = await page.cookies();
