@@ -120,7 +120,7 @@ const instaLogin = () => {
         await page.type('input[name="username"]', process.env.INSTA_USERNAME);
         await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(6000);
         if ((await page.$('.f5C5x')) !== null) {
           console.log('need to click browser info button');
           await page.click('button[type="button"]');
@@ -301,13 +301,6 @@ const checkProfile = () => {
         // Get any new posts
         await page.goto(insta + currUname);
         await page.waitForTimeout(5000);
-        // @ts-ignore
-        let screenshot = await page.screenshot({ encoding: 'base64' });
-        let screenshotArray: Array<Post> = [{
-          // @ts-ignore
-          img: screenshot
-        }];
-        io.sockets.emit('posts', screenshotArray)
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt((x.innerHTML).replace(/,/g, ''))));
         let postsCount = stats[0]; //first span is number of posts
         if (postsCount != currPosts) {
