@@ -125,7 +125,8 @@ const instaLogin = () => {
           console.log('need to click browser info button');
           await page.click('button[type="button"]');
           await page.waitForTimeout(5000);
-          await page.goto('https://www.instagram.com');
+          let buttons = await page.$$('button[type="button"]');
+          console.log buttons.length;
         }
         // get login cookies from session
         const cookiesObject = await page.cookies();
@@ -281,15 +282,28 @@ const checkProfile = () => {
     // @ts-ignore
     .launch({ args: ['--no-sandbox']})
     .then(async browser => {
-      try {
-        // load cookies for login info
+      // try {
+      //   // load cookies for login info
+      //   const page = await browser.newPage();
+      //   const cookiesString = fs.readFileSync(cookiesFilePath);
+      //   const parsedCookies = JSON.parse(cookiesString.toString());
+      //   if (parsedCookies.length !== 0) {
+      //     for (let cookie of parsedCookies) {
+      //       await page.setCookie(cookie);
+      //     }
+      //   }
         const page = await browser.newPage();
-        const cookiesString = fs.readFileSync(cookiesFilePath);
-        const parsedCookies = JSON.parse(cookiesString.toString());
-        if (parsedCookies.length !== 0) {
-          for (let cookie of parsedCookies) {
-            await page.setCookie(cookie);
-          }
+        await page.goto('https://www.instagram.com/accounts/login/');
+        await page.waitForSelector('input[name="username"]');
+        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
+        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
+        await page.click('button[type="submit"]');
+        await page.waitForTimeout(2000);
+        if ((await page.$('.sqdOP')) !== null) {
+          console.log('need to click browser info button');
+          await page.click('button[type="button"]');
+          await page.waitForTimeout(5000);
+          await page.goto('https://www.instagram.com');
         }
         // Get any new posts
         await page.goto(insta + currUname);
@@ -321,7 +335,6 @@ const checkProfile = () => {
         let followerCount = stats[1]; // the second span of class g47SY is followers
         let followingCount = stats[2]; // third span is following (first is posts)
         let links = await page.$$('.Y8-fY');
-
         // check for new followers, only need to show 12 most recent
         if (followerCount != currFollowers) {
           if (followerCount > currFollowers) {
