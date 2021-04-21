@@ -116,6 +116,7 @@ const instaLogin = () => {
       try {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
+        await page.waitForTimeout(10000);
         // @ts-ignore
         let screenshot = await page.screenshot({ encoding: 'base64' });
         let screenshotArray: Array<Post> = [{
