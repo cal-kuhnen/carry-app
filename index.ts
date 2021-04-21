@@ -121,12 +121,14 @@ const instaLogin = () => {
         await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
         await page.click('button[type="submit"]');
         await page.waitForTimeout(2000);
-        if ((await page.$('.sqdOP')) !== null) {
+        if ((await page.$('.f5C5x')) !== null) {
           console.log('need to click browser info button');
           await page.click('button[type="button"]');
           await page.waitForTimeout(5000);
-          let buttons = await page.$$('button[type="button"]');
-          console.log(buttons.length);
+          if ((await page.$('.f5C5x')) !== null) {
+            let buttons = await page.$$('button[type="button"]');
+            await page.click(buttons[1]);
+          }
         }
         // get login cookies from session
         const cookiesObject = await page.cookies();
@@ -283,28 +285,17 @@ const checkProfile = () => {
     .launch({ args: ['--no-sandbox']})
     .then(async browser => {
       try {
-      //   // load cookies for login info
-      //   const page = await browser.newPage();
-      //   const cookiesString = fs.readFileSync(cookiesFilePath);
-      //   const parsedCookies = JSON.parse(cookiesString.toString());
-      //   if (parsedCookies.length !== 0) {
-      //     for (let cookie of parsedCookies) {
-      //       await page.setCookie(cookie);
-      //     }
-      //   }
+        // load cookies for login info
         const page = await browser.newPage();
-        await page.goto('https://www.instagram.com/accounts/login/');
-        await page.waitForSelector('input[name="username"]');
-        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
-        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
-        await page.click('button[type="submit"]');
-        await page.waitForTimeout(2000);
-        if ((await page.$('.sqdOP')) !== null) {
-          console.log('need to click browser info button');
-          await page.click('button[type="button"]');
-          await page.waitForTimeout(5000);
-          await page.goto('https://www.instagram.com');
+        const cookiesString = fs.readFileSync(cookiesFilePath);
+        const parsedCookies = JSON.parse(cookiesString.toString());
+        if (parsedCookies.length !== 0) {
+          for (let cookie of parsedCookies) {
+            await page.setCookie(cookie);
+            console.log('cookies set');
+          }
         }
+
         // Get any new posts
         await page.goto(insta + currUname);
         await page.waitForTimeout(5000);
