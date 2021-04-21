@@ -116,7 +116,7 @@ const instaLogin = () => {
       try {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(5000);
         // @ts-ignore
         // let screenshot = await page.screenshot({ encoding: 'base64' });
         // let screenshotArray: Array<Post> = [{
@@ -155,7 +155,7 @@ const instaLogin = () => {
       }
     });
 }
-instaLogin(); // login on server startup
+//instaLogin(); // login on server startup
 
 // Use puppeteer to access instagram graphql query because using axios results
 // in bot detection and a redirect from instagram.
@@ -177,7 +177,7 @@ const checkUname = async () => {
           }
         }
         await page.goto(query);
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(1000);
         try {
           response = await page.$eval('pre', res => res.textContent); // get JSON portion of html response
         } catch(err) {
@@ -232,7 +232,10 @@ const postComment = (socket: Socket, toPost: Comment) => {
 
         await page.click('button[type="submit"]');
         let image = await page.$eval('img.FFVAD', (el: any) => el.getAttribute('src'));
-        toPost.img = image;
+        let imageSource = await page.goto(image);
+        let buffer = await imageSource.buffer();
+        let base64image = buffer.toString('base64');
+        toPost.img = base64image;
         addComment(socket, toPost);
         console.log('comment posted');
         io.sockets.emit('sound-cList');
@@ -286,6 +289,7 @@ const returnComments = async (socket: Socket) => {
 }
 
 // Check follower and following count, and update lists accordingly
+// This function should be refactored.
 const checkProfile = () => {
   console.log('getting profile info');
   puppeteer
@@ -309,6 +313,14 @@ const checkProfile = () => {
         // Get any new posts
         await page.goto(insta + currUname);
         await page.waitForTimeout(5000);
+        try {
+          await page.waitForSelector('h2.x-6xq', {timeout: 5000}); // check for page not available
+          checkUname();
+          await page.waitForTimeout(2000);
+          await page.goto(insta + currUname);
+        } catch {
+          console.log('username checks out');
+        }
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt((x.innerHTML).replace(/,/g, ''))));
         let postsCount = stats[0]; //first span is number of posts
         if (postsCount != currPosts) {
@@ -344,7 +356,7 @@ const checkProfile = () => {
             }
           }
           await links[1].click(); // click on followers link (cannot be accessed as link)
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(1000);
           let followerDivs = await page.$$('div.PZuss > li');
           let followerList: Array<InstaUser> = [];
           let followerImages = await page.$$eval('.Jv7Aj > .RR-M- > ._2dbep > img._6q-tv', (el: any) => el.map((x: any) => x.getAttribute('src')));
@@ -378,7 +390,7 @@ const checkProfile = () => {
         if (followingCount != currFollowing) {
           let links = await page.$$('.Y8-fY');
           await links[2].click(); // click on following link (cannot be accessed as link)
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(1000);
           let followingDivs = await page.$$('div.PZuss > li');
           let followingList: Array<InstaUser> = [];
           let followingImages = await page.$$eval('.Jv7Aj > .RR-M- > ._2dbep > img._6q-tv', (el: any) => el.map((x: any) => x.getAttribute('src')));
@@ -417,7 +429,6 @@ const checkProfile = () => {
             if (err) {
                 return console.log(err);
             }
-            console.log("file saved");
           });
           let post: Post = {
             key: Math.floor(Date.now() / 1000) + i,
@@ -425,6 +436,7 @@ const checkProfile = () => {
           };
           savedList.push(post);
         }
+        console.log("files saved");
         baseSaved = savedList;
         io.sockets.emit('saved', savedList);
         await page.removeAllListeners();
@@ -450,7 +462,7 @@ const checkPostsMilestone = (postNumber: number) => {
 }
 
 checkUname();
-pingUname = setInterval(checkUname, 120000);
+//pingUname = setInterval(checkUname, 120000);
 pingFollow = setInterval(checkProfile, 60000);
 
 app.get('*', (req, res) => {
