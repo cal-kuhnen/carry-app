@@ -61,7 +61,7 @@ const io = new Server(server);
 let response: string|null = 'none';
 let instaInfo: any = {};
 let currUname = '';
-let staticUname = process.env.INSTA_PROFILE;
+let staticUname = process.env.INSTA_PROFILE || 'tonight_youre_getting_a_call';
 let pingUname: any;
 let pingFollow: any;
 let currPosts = 0;
@@ -168,7 +168,7 @@ const checkUname = async () => {
     .launch({ args: ['--no-sandbox']})
     .then(async browser => {
       try {
-        load cookies for login info
+        //load cookies for login info
         const page = await browser.newPage();
         const cookiesString = fs.readFileSync(cookiesFilePath);
         const parsedCookies = JSON.parse(cookiesString.toString());
