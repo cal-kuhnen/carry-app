@@ -302,8 +302,8 @@ const checkProfile = () => {
         await page.waitForTimeout(5000);
         // @ts-ignore
         let screenshot = await page.screenshot({ encoding: base64 });
-        // @ts-ignore
         let screenshotArray: Array<Post> = [{
+          // @ts-ignore
           img: screenshot
         }];
         io.sockets.emit('posts', screenshotArray)
