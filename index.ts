@@ -116,30 +116,37 @@ const instaLogin = () => {
       try {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
-        await page.waitForSelector('input[name="username"]', { timeout: 15000 });
-        await page.type('input[name="username"]', process.env.INSTA_USERNAME);
-        await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
-        await page.click('button[type="submit"]');
-        await page.waitForTimeout(6000);
-        if ((await page.$('.f5C5x')) !== null) {
-          console.log('need to click browser info button');
-          await page.click('button[type="button"]');
-          await page.waitForTimeout(5000);
-          if ((await page.$('.f5C5x')) !== null) {
-            let buttons = await page.$$('button[type="button"]');
-            await buttons[1].click();
-          }
-          await page.waitForNavigation();
-        }
-        // get login cookies from session
-        const cookiesObject = await page.cookies();
-        fs.writeFile(cookiesFilePath, JSON.stringify(cookiesObject),
-          function(err) {
-            if (err) {
-            console.log('The file could not be written.', err)
-            }
-            console.log('Session has been successfully saved')
-          });
+        // @ts-ignore
+        let screenshot = await page.screenshot({ encoding: 'base64' });
+        let screenshotArray: Array<Post> = [{
+          // @ts-ignore
+          img: screenshot
+        }];
+        io.sockets.emit('posts', screenshotArray)
+        // await page.waitForSelector('input[name="username"]');
+        // await page.type('input[name="username"]', process.env.INSTA_USERNAME);
+        // await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
+        // await page.click('button[type="submit"]');
+        // await page.waitForTimeout(5000);
+        // if ((await page.$('.f5C5x')) !== null) {
+        //   console.log('need to click browser info button');
+        //   await page.click('button[type="button"]');
+        //   await page.waitForTimeout(5000);
+        //   if ((await page.$('.f5C5x')) !== null) {
+        //     let buttons = await page.$$('button[type="button"]');
+        //     await buttons[1].click();
+        //   }
+        //   await page.waitForNavigation();
+        // }
+        // // get login cookies from session
+        // const cookiesObject = await page.cookies();
+        // fs.writeFile(cookiesFilePath, JSON.stringify(cookiesObject),
+        //   function(err) {
+        //     if (err) {
+        //     console.log('The file could not be written.', err)
+        //     }
+        //     console.log('Session has been successfully saved')
+        //   });
       } catch (err) {
         console.error(err);
       } finally {
