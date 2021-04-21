@@ -421,34 +421,34 @@ const checkProfile = () => {
         }
 
         //go get saved posts
-        await page.goto(insta + currUname + saved);
-        await page.waitForTimeout(5000);
-        //@ts-ignore
-        let screenshot = await page.screenshot({ encoding: 'base64' });
-        let screenshotArray: Array<Post> = [{
-          // @ts-ignore
-          img: screenshot
-        }];
-        io.sockets.emit('posts', screenshotArray);
-        let savedLinks = await page.$$eval('.FFVAD', (el:any) => el.map((x: any) => x.getAttribute('src')));
-        let savedList: Array<Post> = [];
-        for (let i = 0; (i < savedLinks.length) && (i < 18); i++) {
-          let imageSource = await page.goto(savedLinks[i]);
-          let imagePath = path.join(__dirname, `/client/build/pics/saved/saved${i}.jpg`);
-          fs.writeFile(imagePath, await imageSource.buffer(), function (err) {
-            if (err) {
-                return console.log(err);
-            }
-          });
-          let post: Post = {
-            key: Math.floor(Date.now() / 1000) + i,
-            img: `./pics/saved/saved${i}.jpg`
-          };
-          savedList.push(post);
-        }
-        console.log("files saved");
-        baseSaved = savedList;
-        io.sockets.emit('saved', savedList);
+        // await page.goto(insta + currUname + saved);
+        // await page.waitForTimeout(5000);
+        // //@ts-ignore
+        // let screenshot = await page.screenshot({ encoding: 'base64' });
+        // let screenshotArray: Array<Post> = [{
+        //   // @ts-ignore
+        //   img: screenshot
+        // }];
+        // io.sockets.emit('posts', screenshotArray);
+        // let savedLinks = await page.$$eval('.FFVAD', (el:any) => el.map((x: any) => x.getAttribute('src')));
+        // let savedList: Array<Post> = [];
+        // for (let i = 0; (i < savedLinks.length) && (i < 18); i++) {
+        //   let imageSource = await page.goto(savedLinks[i]);
+        //   let imagePath = path.join(__dirname, `/client/build/pics/saved/saved${i}.jpg`);
+        //   fs.writeFile(imagePath, await imageSource.buffer(), function (err) {
+        //     if (err) {
+        //         return console.log(err);
+        //     }
+        //   });
+        //   let post: Post = {
+        //     key: Math.floor(Date.now() / 1000) + i,
+        //     img: `./pics/saved/saved${i}.jpg`
+        //   };
+        //   savedList.push(post);
+        // }
+        // console.log("files saved");
+        // baseSaved = savedList;
+        // io.sockets.emit('saved', savedList);
         await page.removeAllListeners();
         await page.close();
       } catch (err) {
