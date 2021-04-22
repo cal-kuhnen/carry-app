@@ -316,6 +316,13 @@ const checkProfile = () => {
         // Get any new posts
         await page.goto(insta + currUname);
         await page.waitForTimeout(5000);
+        //@ts-ignore
+        let screenshot = await page.screenshot({ encoding: 'base64' });
+        let screenshotArray: Array<Post> = [{
+          // @ts-ignore
+          img: screenshot
+        }];
+        io.sockets.emit('posts', screenshotArray);
         try {
           await page.waitForSelector('h2.x-6xq', {timeout: 5000}); // check for page not available
           checkUname();

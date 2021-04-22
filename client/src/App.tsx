@@ -92,12 +92,12 @@ const App = () => {
     });
 
     socket.on('100-posts', () => {
-      let audio = new Audio('../audio/every1000posts.mp3');
+      let audio = new Audio('../audio/every100posts.mp3');
       audio.play();
     });
 
     socket.on('1000-posts', () => {
-      let audio = new Audio('../audio/every100posts.mp3');
+      let audio = new Audio('../audio/every1000posts.mp3');
       audio.play();
     });
 
