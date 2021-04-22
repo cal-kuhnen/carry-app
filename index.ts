@@ -61,7 +61,7 @@ const io = new Server(server);
 let response: string|null = 'none';
 let instaInfo: any = {};
 let currUname = '';
-let staticUname = process.env.INSTA_PROFILE || 'unbeilievably';
+let staticUname = process.env.INSTA_PROFILE || '_mesmerized_by.what_you.know';
 let pingUname: any;
 let pingFollow: any;
 let currPosts = 0;
