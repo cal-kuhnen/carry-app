@@ -118,13 +118,13 @@ const instaLogin = () => {
         const page = await browser.newPage();
         await page.goto('https://www.instagram.com/accounts/login/');
         await page.waitForTimeout(5000);
-        //@ts-ignore
-        let screenshot = await page.screenshot({ encoding: 'base64' });
-        let screenshotArray: Array<Post> = [{
-          // @ts-ignore
-          img: screenshot
-        }];
-        io.sockets.emit('posts', screenshotArray);
+        // //@ts-ignore
+        // let screenshot = await page.screenshot({ encoding: 'base64' });
+        // let screenshotArray: Array<Post> = [{
+        //   // @ts-ignore
+        //   img: screenshot
+        // }];
+        // io.sockets.emit('posts', screenshotArray);
         await page.waitForSelector('input[name="username"]');
         await page.type('input[name="username"]', process.env.INSTA_USERNAME);
         await page.type('input[name="password"]', process.env.INSTA_PASSWORD);
@@ -156,7 +156,7 @@ const instaLogin = () => {
       }
     });
 }
-instaLogin(); // login on server startup
+//instaLogin(); // login on server startup
 
 // Use puppeteer to access instagram graphql query because using axios results
 // in bot detection and a redirect from instagram.
