@@ -156,7 +156,7 @@ const instaLogin = () => {
       }
     });
 }
-//instaLogin(); // login on server startup
+instaLogin(); // login on server startup
 
 // Use puppeteer to access instagram graphql query because using axios results
 // in bot detection and a redirect from instagram.
