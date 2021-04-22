@@ -156,7 +156,7 @@ const instaLogin = () => {
       }
     });
 }
-instaLogin(); // login on server startup
+//instaLogin(); // login on server startup
 
 // Use puppeteer to access instagram graphql query because using axios results
 // in bot detection and a redirect from instagram.
@@ -325,13 +325,6 @@ const checkProfile = () => {
           console.log('username checks out');
         }
         await page.waitForTimeout(500);
-        //@ts-ignore
-        let screenshot = await page.screenshot({ encoding: 'base64' });
-        let screenshotArray: Array<Post> = [{
-          // @ts-ignore
-          img: screenshot
-        }];
-        io.sockets.emit('posts', screenshotArray);
         let stats = await page.$$eval('.g47SY', el => el.map(x => parseInt((x.innerHTML).replace(/,/g, ''))));
         let postsCount = stats[0]; //first span is number of posts
         if (postsCount != currPosts) {
